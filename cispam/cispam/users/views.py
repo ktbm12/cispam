@@ -18,8 +18,6 @@ if TYPE_CHECKING:
 
 class UserDetailView(LoginRequiredMixin, DetailView):
     model = User
-    slug_field = "id"
-    slug_url_kwarg = "id"
 
 
 user_detail_view = UserDetailView.as_view()

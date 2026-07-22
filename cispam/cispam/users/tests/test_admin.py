@@ -13,23 +13,24 @@ from cispam.users.models import User
 
 class TestUserAdmin:
     def test_changelist(self, admin_client):
-        url = reverse("admin:users_user_changelist")
+        url = reverse("admin:users_utilisateur_changelist")
         response = admin_client.get(url)
         assert response.status_code == HTTPStatus.OK
 
     def test_search(self, admin_client):
-        url = reverse("admin:users_user_changelist")
+        url = reverse("admin:users_utilisateur_changelist")
         response = admin_client.get(url, data={"q": "test"})
         assert response.status_code == HTTPStatus.OK
 
     def test_add(self, admin_client):
-        url = reverse("admin:users_user_add")
+        url = reverse("admin:users_utilisateur_add")
         response = admin_client.get(url)
         assert response.status_code == HTTPStatus.OK
 
         response = admin_client.post(
             url,
             data={
+                "username": "new-admin",
                 "email": "new-admin@example.com",
                 "password1": "My_R@ndom-P@ssw0rd",
                 "password2": "My_R@ndom-P@ssw0rd",
@@ -40,7 +41,7 @@ class TestUserAdmin:
 
     def test_view_user(self, admin_client):
         user = User.objects.get(email="admin@example.com")
-        url = reverse("admin:users_user_change", kwargs={"object_id": user.pk})
+        url = reverse("admin:users_utilisateur_change", kwargs={"object_id": user.pk})
         response = admin_client.get(url)
         assert response.status_code == HTTPStatus.OK
 
