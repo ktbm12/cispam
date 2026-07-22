@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Reçu N° {{ recu.numero_recu }} — CISPAM Bafoussam{% endblock title %}
+
+{% block body %}
+<style>
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    body {
+      background-color: white !important;
+    }
+    .printable-ticket {
+      border: 2px solid #0f172a !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+</style>
+
+<div class="min-h-screen bg-slate-200 py-8 px-4 font-sans antialiased text-slate-900">
+  
+  <!-- TOP CONTROL BAR (NO PRINT) -->
+  <div class="max-w-2xl mx-auto mb-6 flex items-center justify-between no-print">
+    <a href="javascript:history.back()" class="px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2">
+      <i class="fas fa-arrow-left"></i>
+      <span>Retour</span>
+    </a>
+
+    <div class="flex items-center gap-3">
+      <button onclick="window.print()"
+        class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black transition shadow-md flex items-center gap-2 cursor-pointer">
+        <i class="fas fa-print"></i>
+        <span>Imprimer / Télécharger PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- OFFICIAL RECEIPT CARD -->
+  <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border-2 border-slate-900 p-8 printable-ticket space-y-6 relative overflow-hidden">
+    
+    <!-- Decorative Watermark Stamp -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none font-black text-7xl font-display text-slate-900 rotate-[-15deg] uppercase">
+      CISPAM PAIEMENT
+    </div>
+
+    <!-- RECEIPT HEADER -->
+    <div class="border-b-2 border-slate-900 pb-4 text-center space-y-1">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-left text-[9px] font-bold text-slate-500 uppercase">
+          RÉPUBLIQUE DU CAMEROUN<br>
+          <span class="text-[8px]">Paix - Travail - Patrie</span>
+        </div>
+        
+        <div class="w-12 h-12 bg-amber-500 text-slate-950 font-black rounded-2xl flex items-center justify-center text-2xl border-2 border-slate-900 shadow-sm">
+          C
+        </div>
+
+        <div class="text-right text-[9px] font-bold text-slate-500 uppercase">
+          REPUBLIC OF CAMEROON<br>
+          <span class="text-[8px]">Peace - Work - Fatherland</span>
+        </div>
+      </div>
+
+      <h1 class="text-base font-black font-display tracking-tight text-slate-900 uppercase">
+        CENTRE D'INTÉGRATION SCOLAIRE ET PROFESSIONNELLE POUR AVEUGLES ET MALVOYANTS
+      </h1>
+      <p class="text-[11px] text-slate-600 font-bold">
+        C.I.S.P.A.M. — B.P. 829 Bafoussam — Tél : (+237) 699 79 72 80
+      </p>
+
+      <div class="pt-3 flex items-center justify-between">
+        <span class="text-xs font-mono font-bold px-3 py-1 bg-slate-900 text-white rounded-lg">
+          N° REÇU : {{ recu.numero_recu }}
+        </span>
+        <span class="text-xs font-bold text-slate-600">
+          Date : {{ recu.date_emission|date:"d/m/Y à H:i" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- STUDENT & PARENT INFO -->
+    <div class="grid grid-cols-2 gap-4 text-xs border-b border-slate-200 pb-4">
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase text-slate-400">Écolier / Élève</p>
+        <p class="text-sm font-black text-slate-900">{{ recu.eleve.nom_complet }}</p>
+        <p class="font-mono text-slate-600">Matricule : <span class="font-bold text-slate-900">{{ recu.eleve.matricule }}</span></p>
+        <p class="font-medium text-slate-600">Classe : <span class="font-bold text-slate-900">{{ recu.paiement.inscription.classe.nom }}</span></p>
+      </div>
+
+      <div class="space-y-1 text-right">
+        <p class="text-[10px] font-extrabold uppercase text-slate-400">Année Scolaire & Parent</p>
+        <p class="font-bold text-slate-900 text-xs">{{ recu.paiement.inscription.annee_scolaire.libelle }}</p>
+        {% with parent=recu.eleve.parents.first %}
+          {% if parent %}
+            <p class="font-bold text-slate-800">{{ parent.nom_complet }} ({{ parent.get_lien_parente_display }})</p>
+            <p class="font-mono text-slate-500">{{ parent.telephone }}</p>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- PAIEMENT BREAKDOWN -->
+    <div class="space-y-3">
+      <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
+        <div class="flex items-center justify-between font-bold">
+          <span class="text-slate-500 uppercase tracking-wider text-[10px]">Motif du versement</span>
+          <span class="text-slate-900 font-extrabold">{{ recu.paiement.get_tranche_display }} (Frais de Scolarité)</span>
+        </div>
+
+        <div class="flex items-center justify-between font-bold">
+          <span class="text-slate-500 uppercase tracking-wider text-[10px]">Mode de Règlement</span>
+          <span class="text-slate-900 font-extrabold">
+            {{ recu.paiement.get_mode_paiement_display }}
+            {% if recu.paiement.reference_transaction %} (Réf: {{ recu.paiement.reference_transaction }}){% endif %}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+          <span class="text-sm font-black text-slate-900 uppercase">Montant Encaissé</span>
+          <span class="text-xl font-black text-emerald-700 font-mono">{{ recu.paiement.montant|floatformat:0 }} FCFA</span>
+        </div>
+      </div>
+
+      <!-- AMOUNT IN WORDS -->
+      <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 text-xs text-amber-950 font-medium">
+        <span class="font-bold uppercase text-[10px] text-amber-800">Montant en toutes lettres :</span><br>
+        <span class="font-black italic text-sm text-slate-900">{{ montant_lettres }}</span>
+      </div>
+
+      <!-- FINANCIAL STATUS SUMMARY -->
+      <div class="flex items-center justify-between text-xs font-mono font-bold bg-slate-900 text-white p-3 rounded-xl">
+        <span>Frais Total : {{ recu.paiement.inscription.frais_total|floatformat:0 }} FCFA</span>
+        <span>Cumul Payé : {{ recu.paiement.inscription.montant_paye|floatformat:0 }} FCFA</span>
+        <span class="text-amber-400">Solde Restant : {{ recu.paiement.solde_apres_paiement|floatformat:0 }} FCFA</span>
+      </div>
+    </div>
+
+    <!-- SIGNATURES BLOCK -->
+    <div class="pt-6 border-t-2 border-slate-900 grid grid-cols-2 gap-8 text-xs font-bold">
+      <div class="text-center space-y-12">
+        <p class="uppercase tracking-wider text-[10px] text-slate-500">Le Parent / Le Versant</p>
+        <p class="text-slate-400 font-normal italic text-[10px]">(Signature)</p>
+      </div>
+
+      <div class="text-center space-y-12">
+        <p class="uppercase tracking-wider text-[10px] text-slate-500">Pour le CISPAM (L'Économe)</p>
+        <div class="space-y-0.5">
+          <p class="font-black text-slate-900 uppercase">{{ recu.paiement.operateur|default:"La Caisse CISPAM" }}</p>
+          <p class="text-slate-400 font-normal italic text-[10px]">(Signature et Cachet Officiel)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="text-center text-[9px] text-slate-400 pt-4 border-t border-slate-100 font-mono">
+      Reçu officiel généré par le Système de Gestion CISPAM Bafoussam. Document valable avec le cachet de la Caisse.
+    </div>
+
+  </div>
+
+</div>
+{% endblock body %}

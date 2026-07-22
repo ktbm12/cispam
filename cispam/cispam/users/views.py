@@ -460,6 +460,40 @@ inscriptions_create_view = InscriptionCreateView.as_view()
 # VUES — PAIEMENTS & CAISSE
 # ==============================================================================
 
+def amount_to_words_fr(n):
+    """Convertit un montant entier en toutes lettres en français."""
+    units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"]
+    tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingts", "quatre-vingt-dix"]
+    n = int(n)
+    if n == 0:
+        return "zéro"
+    if n < 20:
+        return units[n]
+    if n < 100:
+        t = n // 10
+        r = n % 10
+        if t in (7, 9):
+            prefix = tens[t-1]
+            suffix = units[r+10]
+        else:
+            prefix = tens[t]
+            suffix = units[r]
+        if r == 1 and t not in (8, 9):
+            return f"{prefix} et un"
+        return f"{prefix}{'-' + suffix if suffix else ''}"
+    if n < 1000:
+        c = n // 100
+        r = n % 100
+        prefix = "cent" if c == 1 else f"{units[c]} cents" if r == 0 else f"{units[c]} cent"
+        return f"{prefix}{' ' + amount_to_words_fr(r) if r else ''}"
+    if n < 1000000:
+        k = n // 1000
+        r = n % 1000
+        prefix = "mille" if k == 1 else f"{amount_to_words_fr(k)} mille"
+        return f"{prefix}{' ' + amount_to_words_fr(r) if r else ''}"
+    return str(n)
+
+
 class PaiementCreateView(LoginRequiredMixin, RedirectView):
     permanent = False
 
@@ -509,7 +543,7 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
 
             messages.success(
                 request,
-                f"Encaissement de {montant_num:,.0f} FCFA enregistré avec succès ! Reçu N° {recu.numero_recu} généré."
+                f"Encaissement de {montant_num:,.0f} FCFA enregistré ! <a href='/recus/{recu.pk}/' target='_blank' class='font-black underline ml-1'>Imprimer / Télécharger le Reçu N° {recu.numero_recu}</a>"
             )
 
         except Exception as e:
@@ -519,6 +553,25 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
 
 
 paiements_create_view = PaiementCreateView.as_view()
+
+
+class RecuDetailView(LoginRequiredMixin, DetailView):
+    template_name = "recus/detail.html"
+    context_object_name = "recu"
+
+    def get_queryset(self):
+        from cispam.users.models import Recu
+        return Recu.objects.all().select_related("paiement__inscription__eleve", "paiement__inscription__classe", "paiement__inscription__annee_scolaire")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        recu = self.get_object()
+        context["montant_lettres"] = f"{amount_to_words_fr(recu.paiement.montant).capitalize()} Francs CFA"
+        return context
+
+
+recu_detail_view = RecuDetailView.as_view()
+
 
 
 

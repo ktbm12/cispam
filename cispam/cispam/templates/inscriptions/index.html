@@ -238,7 +238,11 @@
                 <div class="text-right">
                   <span class="text-xs font-black text-emerald-600 font-mono">+{{ paiement.montant|floatformat:0 }} FCFA</span>
                   {% if paiement.recu %}
-                    <p class="text-[10px] font-mono text-slate-500 font-bold">N° {{ paiement.recu.numero_recu }}</p>
+                    <a href="{% url 'recu_detail' pk=paiement.recu.pk %}" target="_blank" title="Imprimer Reçu PDF"
+                      class="mt-0.5 inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-600 hover:text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded transition">
+                      <i class="fas fa-print"></i>
+                      <span>Reçu N° {{ paiement.recu.numero_recu }}</span>
+                    </a>
                   {% endif %}
                 </div>
               </div>

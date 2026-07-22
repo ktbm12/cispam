@@ -16,6 +16,7 @@ from cispam.users.views import frais_list_view
 from cispam.users.views import inscriptions_create_view
 from cispam.users.views import inscriptions_list_view
 from cispam.users.views import paiements_create_view
+from cispam.users.views import recu_detail_view
 
 urlpatterns = [
     path("", dashboard_view, name="dashboard"),
@@ -30,6 +31,7 @@ urlpatterns = [
     path("inscriptions/", inscriptions_list_view, name="inscriptions_list"),
     path("inscriptions/nouvelle/", inscriptions_create_view, name="inscriptions_create"),
     path("paiements/creer/", paiements_create_view, name="paiements_create"),
+    path("recus/<uuid:pk>/", recu_detail_view, name="recu_detail"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
