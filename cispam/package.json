@@ -1,4 +1,11 @@
 {
+  "name": "cispam",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tailwindcss -i ./cispam/static/css/input.css -o ./cispam/static/css/output.css --watch",
+    "build": "tailwindcss -i ./cispam/static/css/input.css -o ./cispam/static/css/output.css --minify"
+  },
   "dependencies": {
     "@tailwindcss/cli": "^4.3.3",
     "tailwindcss": "^4.3.3"
