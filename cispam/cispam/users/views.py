@@ -174,7 +174,11 @@ class ClasseListView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from cispam.users.models import AnneeScolaire, Classe, Niveau
+        from cispam.users.models import AnneeScolaire, Classe, Niveau, NiveauScolaireEnum
+
+        if not Niveau.objects.exists():
+            Niveau.objects.get_or_create(nom=NiveauScolaireEnum.MATERNELLE, defaults={"ordre": 1, "description": "Cycle Maternelle"})
+            Niveau.objects.get_or_create(nom=NiveauScolaireEnum.PRIMAIRE, defaults={"ordre": 2, "description": "Cycle Primaire"})
 
         classes = Classe.objects.filter(is_deleted=False).select_related("niveau")
         niveaux = Niveau.objects.filter(is_deleted=False)
@@ -313,11 +317,13 @@ class InscriptionListView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from cispam.users.models import AnneeScolaire, Classe, Inscription
+        from cispam.users.models import AnneeScolaire, Classe, Inscription, ModePaiementEnum, TrancheEnum
 
         try:
             annee_active = AnneeScolaire.objects.get(est_active=True)
-            inscriptions = Inscription.objects.filter(annee_scolaire=annee_active, is_deleted=False).select_related("eleve", "classe", "annee_scolaire")
+            inscriptions = Inscription.objects.filter(annee_scolaire=annee_active, is_deleted=False).select_related(
+                "eleve", "classe", "annee_scolaire"
+            ).prefetch_related("eleve__parents", "paiements")
         except AnneeScolaire.DoesNotExist:
             annee_active = None
             inscriptions = Inscription.objects.none()
@@ -328,6 +334,8 @@ class InscriptionListView(LoginRequiredMixin, TemplateView):
             "inscriptions": inscriptions,
             "classes": classes,
             "annee_active": annee_active,
+            "modes_paiement": ModePaiementEnum.choices,
+            "tranches": TrancheEnum.choices,
         })
         return context
 
@@ -446,5 +454,71 @@ class InscriptionCreateView(LoginRequiredMixin, TemplateView):
 
 inscriptions_list_view = InscriptionListView.as_view()
 inscriptions_create_view = InscriptionCreateView.as_view()
+
+
+# ==============================================================================
+# VUES — PAIEMENTS & CAISSE
+# ==============================================================================
+
+class PaiementCreateView(LoginRequiredMixin, RedirectView):
+    permanent = False
+
+    def post(self, request, *args, **kwargs):
+        from django.contrib import messages
+        from django.shortcuts import get_object_or_404, redirect
+        from cispam.users.models import Inscription, ModePaiementEnum, Paiement, Recu, StatutRecuEnum, TrancheEnum
+
+        inscription_id = request.POST.get("inscription_id")
+        montant = request.POST.get("montant")
+        mode_paiement = request.POST.get("mode_paiement", ModePaiementEnum.ESPECES)
+        tranche = request.POST.get("tranche", TrancheEnum.TRANCHE_1)
+        reference_transaction = request.POST.get("reference_transaction", "").strip()
+
+        if not inscription_id or not montant:
+            messages.error(request, "Veuillez préciser l'inscription et le montant du paiement.")
+            return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
+
+        inscription = get_object_or_404(Inscription, pk=inscription_id)
+
+        try:
+            montant_num = float(montant)
+            if montant_num <= 0:
+                messages.error(request, "Le montant doit être supérieur à 0 FCFA.")
+                return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
+
+            # 1. Création du paiement
+            paiement = Paiement.objects.create(
+                inscription=inscription,
+                montant=montant_num,
+                mode_paiement=mode_paiement,
+                tranche=tranche,
+                reference_transaction=reference_transaction,
+                operateur=request.user.name or request.user.username,
+            )
+
+            # 2. Génération automatique du reçu
+            annee = inscription.annee_scolaire.libelle.split('-')[0] if inscription.annee_scolaire else '0000'
+            count_recus = Recu.objects.count() + 1
+            num_recu = f"REC-{annee}-{count_recus:05d}"
+
+            recu = Recu.objects.create(
+                paiement=paiement,
+                numero_recu=num_recu,
+                statut=StatutRecuEnum.GENERE,
+            )
+
+            messages.success(
+                request,
+                f"Encaissement de {montant_num:,.0f} FCFA enregistré avec succès ! Reçu N° {recu.numero_recu} généré."
+            )
+
+        except Exception as e:
+            messages.error(request, f"Erreur lors de l'enregistrement du paiement : {e}")
+
+        return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
+
+
+paiements_create_view = PaiementCreateView.as_view()
+
 
 

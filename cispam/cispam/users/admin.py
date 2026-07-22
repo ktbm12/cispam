@@ -166,7 +166,7 @@ class InscriptionAdmin(SoftDeleteAdminMixin, admin.ModelAdmin):
     list_filter = ['statut', 'type_inscription', 'annee_scolaire', 'classe']
     search_fields = ['reference', 'eleve__nom', 'eleve__prenom', 'eleve__matricule']
     ordering = ['-date_inscription']
-    readonly_fields = ['reference', 'slug', 'montant_paye', 'solde', 'statut_paiement', 'pourcentage_paye', 'created', 'modified']
+    readonly_fields = ['reference', 'slug', 'date_inscription', 'montant_paye', 'solde', 'statut_paiement', 'pourcentage_paye', 'created', 'modified']
     fieldsets = (
         (_("Inscription"), {
             'fields': ('reference', 'slug', 'eleve', 'classe', 'annee_scolaire', 'date_inscription')

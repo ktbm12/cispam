@@ -19,11 +19,19 @@
         </span>
       </div>
 
-      <a href="{% url 'inscriptions_create' %}"
-        class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-        <i class="fas fa-user-plus"></i>
-        <span>Inscrire un Élève</span>
-      </a>
+      <div class="flex items-center gap-2">
+        <button onclick="openPaymentModal('', '', 0)"
+          class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-cash-register"></i>
+          <span>Encaisser Règlement</span>
+        </button>
+
+        <a href="{% url 'inscriptions_create' %}"
+          class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-user-plus"></i>
+          <span>Inscrire un Élève</span>
+        </a>
+      </div>
     </header>
 
     <main class="p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
@@ -36,11 +44,11 @@
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">
               <i class="fas fa-search"></i>
             </div>
-            <input type="text" placeholder="Rechercher par élève, matricule, référence..."
+            <input type="text" id="inscription-search" placeholder="Rechercher élève, matricule, référence..."
               class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-amber-500 transition">
           </div>
 
-          <span class="text-xs text-slate-400 font-medium">Liste des dossiers pour l'année scolaire active</span>
+          <span class="text-xs text-slate-400 font-medium">Affichage des {{ inscriptions.count }} dossier(s) actif(s)</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -57,7 +65,7 @@
                 <th class="py-3.5 px-6 text-right">Actions Uniformes</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tbody class="divide-y divide-slate-100 text-slate-700" id="inscriptions-tbody">
               {% for inscription in inscriptions %}
                 <tr class="hover:bg-slate-50/80 transition">
                   <td class="py-4 px-6 font-mono font-bold text-slate-900">
@@ -76,10 +84,10 @@
                     {{ inscription.get_type_inscription_display }}
                   </td>
                   <td class="py-4 px-6 text-right font-black text-slate-900 font-mono">
-                    {{ inscription.frais_total }} FCFA
+                    {{ inscription.frais_total|floatformat:0 }} FCFA
                   </td>
                   <td class="py-4 px-6 text-right font-black text-emerald-600 font-mono">
-                    {{ inscription.montant_paye }} FCFA
+                    {{ inscription.montant_paye|floatformat:0 }} FCFA
                   </td>
                   <td class="py-4 px-6 text-center">
                     {% if inscription.statut_paiement == 'PAYE' %}
@@ -88,7 +96,7 @@
                       </span>
                     {% elif inscription.statut_paiement == 'PARTIEL' %}
                       <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                        <i class="fas fa-clock mr-1"></i> Partiel (Rst: {{ inscription.solde }} FCFA)
+                        <i class="fas fa-clock mr-1"></i> Partiel ({{ inscription.solde|floatformat:0 }} FCFA)
                       </span>
                     {% else %}
                       <span class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200">
@@ -98,14 +106,19 @@
                   </td>
                   <td class="py-4 px-6 text-right">
                     <div class="flex items-center justify-end gap-2">
-                      <a href="{% url 'admin:users_paiement_add' %}" title="Encaisser un règlement"
-                        class="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition">
+                      <!-- Action 1: Encaisser / Payer Modal -->
+                      <button onclick="openPaymentModal('{{ inscription.pk }}', '{{ inscription.eleve.nom_complet|escapejs }}', '{{ inscription.solde }}')"
+                        title="Encaisser un règlement"
+                        class="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition cursor-pointer">
                         <i class="fas fa-cash-register"></i>
-                      </a>
-                      <a href="{% url 'admin:users_inscription_change' object_id=inscription.pk %}" target="_blank" title="Détails"
-                        class="p-2 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 transition">
-                        <i class="fas fa-pen-to-square"></i>
-                      </a>
+                      </button>
+
+                      <!-- Action 2: Open Off-Canvas Drawer -->
+                      <button onclick="openCandidateDrawer('drawer-{{ inscription.pk }}')"
+                        title="Fiche & Détails de l'Élève"
+                        class="p-2 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 transition cursor-pointer">
+                        <i class="fas fa-eye"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -126,4 +139,264 @@
   </div>
 
 </div>
+
+<!-- ========================================================================= -->
+<!-- OFF-CANVAS SLIDE-OVER DRAWERS (Fiche Détail Candidat) -->
+<!-- ========================================================================= -->
+{% for inscription in inscriptions %}
+<div id="drawer-{{ inscription.pk }}" class="fixed inset-0 z-50 overflow-hidden hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" onclick="closeCandidateDrawer('drawer-{{ inscription.pk }}')"></div>
+
+  <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+    <div class="w-screen max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col justify-between">
+      
+      <!-- Drawer Header -->
+      <div class="p-6 bg-slate-900 text-white relative">
+        <button onclick="closeCandidateDrawer('drawer-{{ inscription.pk }}')" class="absolute top-5 right-5 text-slate-400 hover:text-white text-lg">
+          <i class="fas fa-times"></i>
+        </button>
+
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500 text-slate-950 font-black text-xl flex items-center justify-center border-2 border-amber-300 shadow-lg">
+            {{ inscription.eleve.nom|slice:":1" }}{{ inscription.eleve.prenom|slice:":1" }}
+          </div>
+          <div>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+              {{ inscription.eleve.matricule }}
+            </span>
+            <h3 class="text-lg font-black font-display text-white mt-1 leading-tight">
+              {{ inscription.eleve.nom_complet }}
+            </h3>
+            <p class="text-xs text-slate-400">Inscrit en <span class="text-amber-400 font-bold">{{ inscription.classe.nom }}</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Scrollable Body -->
+      <div class="p-6 space-y-6 overflow-y-auto flex-1 text-xs text-slate-700">
+        
+        <!-- Section 1: Informations Personnelles -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2">
+          <p class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">État Civil & Profil</p>
+          <div class="grid grid-cols-2 gap-2 text-slate-800 font-medium">
+            <div><span class="text-slate-400">Sexe :</span> <span class="font-bold">{{ inscription.eleve.get_sexe_display }}</span></div>
+            <div><span class="text-slate-400">Né(e) le :</span> <span class="font-bold">{{ inscription.eleve.date_naissance|date:"d/m/Y" }}</span></div>
+            <div><span class="text-slate-400">Lieu :</span> <span class="font-bold">{{ inscription.eleve.lieu_naissance|default:"—" }}</span></div>
+            <div><span class="text-slate-400">Adresse :</span> <span class="font-bold">{{ inscription.eleve.adresse|default:"—" }}</span></div>
+          </div>
+        </div>
+
+        <!-- Section 2: Contacts Parents -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2">
+          <p class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Parent / Tuteur Légal</p>
+          {% for parent in inscription.eleve.parents.all %}
+            <div class="flex items-center justify-between font-medium">
+              <div>
+                <p class="font-bold text-slate-900">{{ parent.nom_complet }} ({{ parent.get_lien_parente_display }})</p>
+                <p class="text-slate-500 font-mono"><i class="fas fa-phone mr-1 text-amber-500"></i>{{ parent.telephone|default:"Non renseigné" }}</p>
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-slate-400 italic">Aucun parent enregistré.</p>
+          {% endfor %}
+        </div>
+
+        <!-- Section 3: Bilan Financier -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <p class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Bilan Financier</p>
+            <span class="font-mono text-xs font-bold text-slate-500">Réf: {{ inscription.reference }}</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="p-2 rounded-lg bg-slate-50">
+              <p class="text-[10px] text-slate-400 font-bold uppercase">Total Frais</p>
+              <p class="text-sm font-black text-slate-900 font-mono">{{ inscription.frais_total|floatformat:0 }}</p>
+            </div>
+            <div class="p-2 rounded-lg bg-emerald-50 text-emerald-800">
+              <p class="text-[10px] text-emerald-600 font-bold uppercase">Total Payé</p>
+              <p class="text-sm font-black font-mono">{{ inscription.montant_paye|floatformat:0 }}</p>
+            </div>
+            <div class="p-2 rounded-lg bg-rose-50 text-rose-800">
+              <p class="text-[10px] text-rose-600 font-bold uppercase">Solde Impayé</p>
+              <p class="text-sm font-black font-mono">{{ inscription.solde|floatformat:0 }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Historique des Paiements -->
+        <div class="space-y-2">
+          <p class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Historique des Versements</p>
+          <div class="space-y-2">
+            {% for paiement in inscription.paiements.all %}
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-slate-900 font-mono">{{ paiement.reference }}</p>
+                  <p class="text-[11px] text-slate-400">{{ paiement.date_paiement|date:"d/m/Y H:i" }} — {{ paiement.get_mode_paiement_display }}</p>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-black text-emerald-600 font-mono">+{{ paiement.montant|floatformat:0 }} FCFA</span>
+                  {% if paiement.recu %}
+                    <p class="text-[10px] font-mono text-slate-500 font-bold">N° {{ paiement.recu.numero_recu }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-slate-400 italic text-center py-3 bg-slate-50 rounded-xl">Aucun paiement effectué.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Drawer Footer Action -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50">
+        <button onclick="closeCandidateDrawer('drawer-{{ inscription.pk }}'); openPaymentModal('{{ inscription.pk }}', '{{ inscription.eleve.nom_complet|escapejs }}', '{{ inscription.solde }}')"
+          class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fas fa-cash-register"></i>
+          <span>Encaisser un Règlement (Solde : {{ inscription.solde|floatformat:0 }} FCFA)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- ========================================================================= -->
+<!-- CUSTOM IN-APP PAYMENT MODAL (#modal-paiement) -->
+<!-- ========================================================================= -->
+<div id="modal-paiement" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+          <i class="fas fa-cash-register"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900 font-display">Encaisser un Règlement</h3>
+      </div>
+      <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="{% url 'paiements_create' %}" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Sélectionner l'Inscription / Élève *
+        </label>
+        <select name="inscription_id" id="modal-inscription-id" required
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 transition">
+          <option value="">-- Choisir un écolier --</option>
+          {% for ins in inscriptions %}
+            <option value="{{ ins.pk }}">
+              {{ ins.eleve.nom_complet }} ({{ ins.classe.nom }}) — Solde: {{ ins.solde|floatformat:0 }} FCFA
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Montant encaissé (FCFA) *
+        </label>
+        <input type="number" name="montant" id="modal-montant" required placeholder="ex: 50000" step="500" min="1"
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mode de Paiement</label>
+          <select name="mode_paiement" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900">
+            {% for code, label in modes_paiement %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tranche Concernée</label>
+          <select name="tranche" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900">
+            {% for code, label in tranches %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Référence externe (Optionnel)</label>
+        <input type="text" name="reference_transaction" placeholder="ex: N° Chèque, Réf Virement, N° Tel Mobile Money"
+          class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900">
+      </div>
+
+      <div class="flex items-center gap-3 pt-4 border-t border-slate-100 mt-4">
+        <button type="button" onclick="closePaymentModal()"
+          class="w-1/2 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+          Annuler
+        </button>
+        <button type="submit"
+          class="w-1/2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+          <i class="fas fa-check-circle"></i>
+          <span>Valider & Reçu</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openCandidateDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    if (drawer) {
+      drawer.classList.remove('hidden');
+    }
+  }
+
+  function closeCandidateDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    if (drawer) {
+      drawer.classList.add('hidden');
+    }
+  }
+
+  function openPaymentModal(inscriptionId = '', candidateName = '', remainingBalance = 0) {
+    const modal = document.getElementById('modal-paiement');
+    const select = document.getElementById('modal-inscription-id');
+    const montantInput = document.getElementById('modal-montant');
+
+    if (inscriptionId && select) {
+      select.value = inscriptionId;
+    }
+    if (remainingBalance > 0 && montantInput) {
+      montantInput.value = remainingBalance;
+    } else if (montantInput) {
+      montantInput.value = '';
+    }
+
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function closePaymentModal() {
+    const modal = document.getElementById('modal-paiement');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  // Quick Table Filter
+  document.getElementById('inscription-search')?.addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#inscriptions-tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(term) ? '' : 'none';
+    });
+  });
+</script>
 {% endblock body %}
