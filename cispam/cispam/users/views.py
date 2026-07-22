@@ -520,12 +520,29 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
                 messages.error(request, "Le montant doit être supérieur à 0 FCFA.")
                 return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
 
-            # 1. Création du paiement
+            # Détermination hiérarchique automatique de la tranche
+            cumul_avant = sum(p.montant for p in inscription.paiements.all())
+            try:
+                from cispam.users.models import FraisScolarite
+                frais_cfg = FraisScolarite.objects.get(classe=inscription.classe, annee_scolaire=inscription.annee_scolaire)
+                t1 = frais_cfg.montant_tranche_1
+                t2 = frais_cfg.montant_tranche_2
+            except Exception:
+                t1, t2 = 50000, 50000
+
+            if cumul_avant < t1:
+                tranche_auto = TrancheEnum.TRANCHE_1
+            elif cumul_avant < (t1 + t2):
+                tranche_auto = TrancheEnum.TRANCHE_2
+            else:
+                tranche_auto = TrancheEnum.TRANCHE_3
+
+            # 1. Création du paiement avec tranche calculée automatiquement
             paiement = Paiement.objects.create(
                 inscription=inscription,
                 montant=montant_num,
                 mode_paiement=mode_paiement,
-                tranche=tranche,
+                tranche=tranche_auto,
                 reference_transaction=reference_transaction,
                 operateur=request.user.name or request.user.username,
             )
@@ -566,7 +583,17 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         recu = self.get_object()
-        context["montant_lettres"] = f"{amount_to_words_fr(recu.paiement.montant).capitalize()} Francs CFA"
+        inscription = recu.paiement.inscription
+
+        # Récapitulatif chronologique de tous les versements de l'élève jusqu'à ce reçu
+        historique_paiements = inscription.paiements.filter(
+            date_paiement__lte=recu.paiement.date_paiement
+        ).order_by("date_paiement")
+
+        context.update({
+            "montant_lettres": f"{amount_to_words_fr(recu.paiement.montant).capitalize()} Francs CFA",
+            "historique_paiements": historique_paiements,
+        })
         return context
 
 

@@ -131,6 +131,40 @@
         <span class="font-black italic text-sm text-slate-900">{{ montant_lettres }}</span>
       </div>
 
+      <!-- RECAPITULATIF CHRONOLOGIQUE DES PAIEMENTS DE L'ÉLÈVE -->
+      {% if historique_paiements %}
+      <div class="border border-slate-200 rounded-xl overflow-hidden text-[11px] mt-2">
+        <div class="bg-slate-100 px-3 py-1.5 font-bold uppercase text-[9px] text-slate-500 border-b border-slate-200 flex items-center justify-between">
+          <span>Historique & Synthèse des Versements (Année {{ recu.paiement.inscription.annee_scolaire.libelle }})</span>
+          <span class="text-amber-700 font-black">N° Ce Reçu : {{ recu.numero_recu }}</span>
+        </div>
+        <table class="w-full text-left font-mono">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-400 text-[10px]">
+            <tr>
+              <th class="py-1 px-3">Réf / Date</th>
+              <th class="py-1 px-3">Imputation</th>
+              <th class="py-1 px-3">Mode</th>
+              <th class="py-1 px-3 text-right">Montant</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            {% for p in historique_paiements %}
+              <tr class="{% if p.pk == recu.paiement.pk %}bg-amber-50/90 font-bold text-slate-900{% endif %}">
+                <td class="py-1.5 px-3">
+                  {{ p.reference }} <span class="text-[10px] text-slate-400 font-normal">({{ p.date_paiement|date:"d/m/Y" }})</span>
+                </td>
+                <td class="py-1.5 px-3 font-sans text-[10px]">{{ p.get_tranche_display }}</td>
+                <td class="py-1.5 px-3 font-sans text-[10px]">{{ p.get_mode_paiement_display }}</td>
+                <td class="py-1.5 px-3 text-right font-black {% if p.pk == recu.paiement.pk %}text-emerald-700{% else %}text-slate-900{% endif %}">
+                  {{ p.montant|floatformat:0 }} FCFA
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
       <!-- FINANCIAL STATUS SUMMARY -->
       <div class="flex items-center justify-between text-xs font-mono font-bold bg-slate-900 text-white p-3 rounded-xl">
         <span>Frais Total : {{ recu.paiement.inscription.frais_total|floatformat:0 }} FCFA</span>
