@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Gestion des Classes — CISPAM{% endblock title %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800">
+
+  <!-- EXECUTIVE SIDEBAR -->
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 text-white flex flex-col justify-between shrink-0 sticky top-0 h-screen shadow-2xl z-40 hidden md:flex">
+    <div class="p-6 space-y-6 overflow-y-auto">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-amber-500 text-slate-950 font-black rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20 border-2 border-amber-300">C</div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-xl font-black font-display text-white">C.I.S.P.A.M.</h1>
+            <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 uppercase">Bafoussam</span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Gestion Scolaire & Caisse</p>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Menu Principal</p>
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-chart-pie text-sm text-amber-400"></i>
+          <span>Tableau de Bord</span>
+        </a>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Scolarité & Élèves</p>
+        <a href="{% url 'inscriptions_list' %}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-user-graduate text-sm text-sky-400 w-5"></i>
+          <span>Dossiers Inscriptions</span>
+        </a>
+        <a href="{% url 'classes_list' %}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20">
+          <i class="fas fa-school text-sm w-5"></i>
+          <span>Gestion des Classes</span>
+        </a>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Caisse & Finances</p>
+        <a href="{% url 'frais_list' %}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-hand-holding-dollar text-sm text-amber-400 w-5"></i>
+          <span>Grille des Frais</span>
+        </a>
+        <a href="{% url 'annees_list' %}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-calendar-days text-sm text-emerald-400 w-5"></i>
+          <span>Années Scolaires</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-slate-800 bg-slate-950/60">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0 border border-amber-500/30">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-xs font-bold text-white truncate">{{ request.user.name|default:request.user.username }}</p>
+            <p class="text-[10px] text-amber-400 font-semibold truncate">Administrateur</p>
+          </div>
+        </div>
+        <form method="POST" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition text-xs font-semibold cursor-pointer">
+            <i class="fas fa-power-off"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 flex items-center justify-between shadow-xs">
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-black text-slate-900 font-display">Classes de l'Établissement</h2>
+        <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 font-bold text-slate-600">
+          {{ classes.count }} classe(s)
+        </span>
+      </div>
+
+      <button onclick="document.getElementById('modal-classe').classList.remove('hidden')"
+        class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+        <i class="fas fa-plus"></i>
+        <span>Nouvelle Classe</span>
+      </button>
+    </header>
+
+    <main class="p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
+      
+      <!-- UNIFORM DATATABLE -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+          
+          <!-- Filter Search -->
+          <div class="relative w-full sm:w-72">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+              <i class="fas fa-search"></i>
+            </div>
+            <input type="text" id="table-search" placeholder="Rechercher une classe..."
+              class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-amber-500 transition">
+          </div>
+
+          <span class="text-xs text-slate-400 font-medium">Affichage des effectifs par classe pour l'année active</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
+              <tr>
+                <th class="py-3.5 px-6">Classe</th>
+                <th class="py-3.5 px-6">Niveau</th>
+                <th class="py-3.5 px-6">Capacité Max</th>
+                <th class="py-3.5 px-6">Effectif Actuel</th>
+                <th class="py-3.5 px-6">Places Restantes</th>
+                <th class="py-3.5 px-6 text-right">Actions Uniformes</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              {% for classe in classes %}
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="py-4 px-6 font-bold text-slate-900 font-display text-sm">
+                    {{ classe.nom }}
+                  </td>
+                  <td class="py-4 px-6 font-medium">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
+                      {{ classe.niveau.get_nom_display }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 font-mono font-semibold text-slate-700">
+                    {{ classe.capacite_max }} élèves
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="font-bold text-slate-900 font-mono">{{ classe.effectif_actuel }}</span>
+                  </td>
+                  <td class="py-4 px-6 font-bold">
+                    {% if classe.places_restantes > 5 %}
+                      <span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i> {{ classe.places_restantes }} dispo</span>
+                    {% elif classe.places_restantes > 0 %}
+                      <span class="text-amber-600"><i class="fas fa-exclamation-triangle mr-1"></i> {{ classe.places_restantes }} rst</span>
+                    {% else %}
+                      <span class="text-rose-600 font-black"><i class="fas fa-circle-xmark mr-1"></i> Comble</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-2">
+                      <a href="{% url 'admin:users_classe_change' object_id=classe.pk %}" target="_blank" title="Éditer"
+                        class="p-2 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 transition">
+                        <i class="fas fa-pen-to-square"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="py-8 text-center text-slate-400">
+                    <i class="fas fa-school text-3xl text-slate-300 mb-2 block"></i>
+                    Aucune classe configurée. Utilisez le bouton "Nouvelle Classe" pour en ajouter une.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</div>
+
+<!-- UNIFORM MODAL CREATION CLASSE -->
+<div id="modal-classe" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+      <h3 class="text-base font-bold text-slate-900 font-display">Créer une Classe</h3>
+      <button onclick="document.getElementById('modal-classe').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="{% url 'classes_create' %}" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Nom de la Classe * (ex: SIL, CP, CE1, CM2)
+        </label>
+        <input type="text" name="nom" required placeholder="ex: CP - A"
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Niveau Scolaire *
+        </label>
+        <select name="niveau" required
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 transition">
+          {% for niv in niveaux %}
+            <option value="{{ niv.pk }}">{{ niv.get_nom_display }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Capacité Maximale d'Élèves
+        </label>
+        <input type="number" name="capacite_max" value="30" min="1" max="100"
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <div class="flex items-center gap-3 pt-4 border-t border-slate-100 mt-4">
+        <button type="button" onclick="document.getElementById('modal-classe').classList.add('hidden')"
+          class="w-1/2 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+          Annuler
+        </button>
+        <button type="submit"
+          class="w-1/2 py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl transition shadow-md">
+          Enregistrer Classe
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock body %}

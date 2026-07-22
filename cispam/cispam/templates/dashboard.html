@@ -63,22 +63,16 @@
       <div class="space-y-1">
         <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Scolarité & Élèves</p>
 
-        <a href="{% url 'admin:users_eleve_changelist' %}"
+        <a href="{% url 'inscriptions_list' %}"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
           <i class="fas fa-user-graduate text-sm text-sky-400 w-5"></i>
-          <span>Gestion des Élèves</span>
+          <span>Dossiers Inscriptions</span>
         </a>
 
-        <a href="{% url 'admin:users_inscription_changelist' %}"
+        <a href="{% url 'classes_list' %}"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
-          <i class="fas fa-file-signature text-sm text-indigo-400 w-5"></i>
-          <span>Inscriptions & Classes</span>
-        </a>
-
-        <a href="{% url 'admin:users_parent_changelist' %}"
-          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
-          <i class="fas fa-users-between-lines text-sm text-amber-400 w-5"></i>
-          <span>Parents & Tuteurs</span>
+          <i class="fas fa-school text-sm text-indigo-400 w-5"></i>
+          <span>Gestion des Classes</span>
         </a>
       </div>
 
@@ -98,10 +92,16 @@
           <span>Reçus Officiels</span>
         </a>
 
-        <a href="{% url 'admin:users_fraisscolarite_changelist' %}"
+        <a href="{% url 'frais_list' %}"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
           <i class="fas fa-hand-holding-dollar text-sm text-amber-400 w-5"></i>
-          <span>Grille Tarifaire</span>
+          <span>Grille des Frais</span>
+        </a>
+
+        <a href="{% url 'annees_list' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-calendar-days text-sm text-emerald-400 w-5"></i>
+          <span>Années Scolaires</span>
         </a>
       </div>
 
@@ -171,10 +171,10 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-3">
-        <a href="{% url 'admin:users_eleve_add' %}"
+        <a href="{% url 'inscriptions_create' %}"
           class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
           <i class="fas fa-plus"></i>
-          <span>Nouvel Élève</span>
+          <span>Inscrire Élève</span>
         </a>
 
         <a href="{% url 'admin:users_paiement_add' %}"

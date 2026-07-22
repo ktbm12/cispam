@@ -5,11 +5,29 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include
 from django.urls import path
 from django.views import defaults as default_views
+from cispam.users.views import annees_activate_view
+from cispam.users.views import annees_create_view
+from cispam.users.views import annees_list_view
+from cispam.users.views import classes_create_view
+from cispam.users.views import classes_list_view
 from cispam.users.views import dashboard_view
+from cispam.users.views import frais_create_view
+from cispam.users.views import frais_list_view
+from cispam.users.views import inscriptions_create_view
+from cispam.users.views import inscriptions_list_view
 
 urlpatterns = [
     path("", dashboard_view, name="dashboard"),
     path("dashboard/", dashboard_view, name="dashboard_page"),
+    path("annees/", annees_list_view, name="annees_list"),
+    path("annees/<uuid:pk>/activer/", annees_activate_view, name="annees_activate"),
+    path("annees/creer/", annees_create_view, name="annees_create"),
+    path("classes/", classes_list_view, name="classes_list"),
+    path("classes/creer/", classes_create_view, name="classes_create"),
+    path("frais/", frais_list_view, name="frais_list"),
+    path("frais/creer/", frais_create_view, name="frais_create"),
+    path("inscriptions/", inscriptions_list_view, name="inscriptions_list"),
+    path("inscriptions/nouvelle/", inscriptions_create_view, name="inscriptions_create"),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
     # User management

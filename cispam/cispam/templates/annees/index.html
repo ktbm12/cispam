@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Gestion des Années Scolaires — CISPAM{% endblock title %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800">
+
+  <!-- ========================================================================= -->
+  <!-- EXECUTIVE SIDEBAR NAVIGATION -->
+  <!-- ========================================================================= -->
+  <aside class="w-72 bg-slate-900 border-r border-slate-800 text-white flex flex-col justify-between shrink-0 sticky top-0 h-screen shadow-2xl z-40 hidden md:flex">
+    
+    <!-- Top Part: Logo & Navigation Menu -->
+    <div class="p-6 space-y-6 overflow-y-auto">
+      
+      <!-- Brand Header -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 bg-amber-500 text-slate-950 font-black rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20 border-2 border-amber-300">
+          C
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-xl font-black font-display tracking-tight text-white">C.I.S.P.A.M.</h1>
+            <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 uppercase">
+              Bafoussam
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">Gestion Scolaire & Caisse</p>
+        </div>
+      </div>
+
+      <!-- Navigation Section 1: Principal -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Menu Principal</p>
+
+        <a href="{% url 'dashboard' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-chart-pie text-sm text-amber-400"></i>
+          <span>Tableau de Bord</span>
+        </a>
+      </div>
+
+      <!-- Navigation Section 2: Scolarité & Élèves -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Scolarité & Élèves</p>
+
+        <a href="{% url 'admin:users_eleve_changelist' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-user-graduate text-sm text-sky-400 w-5"></i>
+          <span>Gestion des Élèves</span>
+        </a>
+
+        <a href="{% url 'admin:users_inscription_changelist' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-file-signature text-sm text-indigo-400 w-5"></i>
+          <span>Inscriptions & Classes</span>
+        </a>
+      </div>
+
+      <!-- Navigation Section 3: Caisse & Finances -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Caisse & Finances</p>
+
+        <a href="{% url 'admin:users_paiement_changelist' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-cash-register text-sm text-emerald-400 w-5"></i>
+          <span>Encaissements (Caisse)</span>
+        </a>
+
+        <a href="{% url 'admin:users_recu_changelist' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-receipt text-sm text-teal-400 w-5"></i>
+          <span>Reçus Officiels</span>
+        </a>
+      </div>
+
+      <!-- Navigation Section 4: Configuration -->
+      <div class="space-y-1">
+        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Configuration</p>
+
+        <a href="{% url 'annees_list' %}"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20">
+          <i class="fas fa-calendar-days text-sm"></i>
+          <span>Années Scolaires</span>
+        </a>
+
+        <a href="{% url 'admin:index' %}" target="_blank"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
+          <i class="fas fa-sliders text-sm text-rose-400 w-5"></i>
+          <span>Console Admin Django</span>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Bottom Part: User Profile & Logout -->
+    <div class="p-4 border-t border-slate-800 bg-slate-950/60">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0 border border-amber-500/30">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-xs font-bold text-white leading-tight truncate">
+              {{ request.user.name|default:request.user.username }}
+            </p>
+            <p class="text-[10px] text-amber-400 font-semibold truncate">Administrateur</p>
+          </div>
+        </div>
+
+        <form method="POST" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit" title="Se déconnecter"
+            class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 transition border border-rose-500/30 text-xs font-semibold cursor-pointer">
+            <i class="fas fa-power-off"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN CONTENT AREA -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    
+    <!-- Top Header Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 flex items-center justify-between shadow-xs">
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-black text-slate-900 font-display">Gestion des Années Scolaires</h2>
+        <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 font-bold text-slate-600">
+          {{ annees.count }} enregistrée(s)
+        </span>
+      </div>
+
+      <button onclick="document.getElementById('modal-annee').classList.remove('hidden')"
+        class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+        <i class="fas fa-plus"></i>
+        <span>Nouvelle Année Scolaire</span>
+      </button>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="p-6 sm:p-8 space-y-8 max-w-7xl w-full mx-auto">
+
+      <!-- Active Academic Year Banner Card -->
+      {% if annee_active %}
+        <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white border border-slate-700 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-2xl font-bold">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold uppercase flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Année Active Actuelle
+                </span>
+              </div>
+              <h3 class="text-2xl font-black font-display text-white mt-1">{{ annee_active.libelle }}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">
+                Du <span class="font-bold text-slate-200">{{ annee_active.date_debut|date:"d/m/Y" }}</span> au <span class="font-bold text-slate-200">{{ annee_active.date_fin|date:"d/m/Y" }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a href="{% url 'admin:users_anneescolaire_change' object_id=annee_active.pk %}" target="_blank"
+              class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
+              <i class="fas fa-pen-to-square"></i> Modifier
+            </a>
+          </div>
+        </div>
+      {% else %}
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-amber-900 text-center">
+          <i class="fas fa-triangle-exclamation text-2xl text-amber-600 mb-2"></i>
+          <h3 class="font-bold text-sm">Aucune année scolaire active !</h3>
+          <p class="text-xs text-amber-700 mt-1">Veuillez sélectionner ou créer une année scolaire comme active ci-dessous.</p>
+        </div>
+      {% endif %}
+
+      <!-- Grid of Academic Years -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for annee in annees %}
+          <div class="bg-white rounded-2xl border {% if annee.est_active %}border-amber-400 ring-2 ring-amber-400/20 shadow-md{% else %}border-slate-200 shadow-sm{% endif %} p-6 flex flex-col justify-between transition hover:shadow-md">
+            
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xl font-black text-slate-900 font-display">{{ annee.libelle }}</span>
+                {% if annee.est_active %}
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Active
+                  </span>
+                {% else %}
+                  <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                    Inactive
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="space-y-2 text-xs text-slate-600 mt-4">
+                <div class="flex items-center justify-between py-1 border-b border-slate-100">
+                  <span class="text-slate-400 font-medium">Début :</span>
+                  <span class="font-bold text-slate-800">{{ annee.date_debut|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between py-1 border-b border-slate-100">
+                  <span class="text-slate-400 font-medium">Fin :</span>
+                  <span class="font-bold text-slate-800">{{ annee.date_fin|date:"d/m/Y" }}</span>
+                </div>
+                <div class="flex items-center justify-between py-1">
+                  <span class="text-slate-400 font-medium">Inscriptions :</span>
+                  <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ annee.nb_inscriptions }} dossier(s)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
+              {% if not annee.est_active %}
+                <form method="POST" action="{% url 'annees_activate' pk=annee.pk %}" class="w-full">
+                  {% csrf_token %}
+                  <button type="submit"
+                    class="w-full py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                    <i class="fas fa-check-circle"></i> Définir comme Année Active
+                  </button>
+                </form>
+              {% else %}
+                <div class="w-full py-2.5 px-3 bg-emerald-50 text-emerald-800 font-bold text-xs rounded-xl text-center border border-emerald-200">
+                  <i class="fas fa-check"></i> Année Active en cours
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+        {% empty %}
+          <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-200">
+            <i class="fas fa-calendar-xmark text-4xl text-slate-300 mb-3 block"></i>
+            <p class="text-sm font-bold text-slate-700">Aucune année scolaire n'est créée.</p>
+            <p class="text-xs text-slate-400 mt-1">Cliquez sur le bouton "Nouvelle Année Scolaire" pour commencer.</p>
+          </div>
+        {% endfor %}
+      </div>
+
+    </main>
+  </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: CREER UNE ANNEE SCOLAIRE -->
+<!-- ========================================================================= -->
+<div id="modal-annee" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+      <h3 class="text-base font-bold text-slate-900 font-display">Nouvelle Année Scolaire</h3>
+      <button onclick="document.getElementById('modal-annee').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form method="POST" action="{% url 'annees_create' %}" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+          Libellé de l'Année (ex: 2026-2027)
+        </label>
+        <input type="text" name="libelle" required placeholder="2026-2027"
+          class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Date Début
+          </label>
+          <input type="date" name="date_debut" required
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Date Fin
+          </label>
+          <input type="date" name="date_fin" required
+            class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <input type="checkbox" name="est_active" id="id_est_active" class="rounded border-slate-300 text-amber-500 focus:ring-amber-500">
+        <label for="id_est_active" class="text-xs font-bold text-slate-700 cursor-pointer">
+          Activer directement cette année scolaire
+        </label>
+      </div>
+
+      <div class="flex items-center gap-3 pt-4 border-t border-slate-100 mt-4">
+        <button type="button" onclick="document.getElementById('modal-annee').classList.add('hidden')"
+          class="w-1/2 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+          Annuler
+        </button>
+        <button type="submit"
+          class="w-1/2 py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl transition shadow-md">
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock body %}
