@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+@theme {
+  --color-cispam-navy: #0F172A;
+  --color-cispam-navy-dark: #0B192C;
+  --color-cispam-navy-light: #1E293B;
+  --color-cispam-gold: #F59E0B;
+  --color-cispam-gold-hover: #D97706;
+  --color-cispam-gold-light: #FEF3C7;
+  --color-cispam-orange: #F97316;
+  --color-cispam-sky: #0284C7;
+  --color-cispam-sky-light: #E0F2FE;
+  --color-cispam-cream: #FFFBEB;
+  --color-cispam-emerald: #059669;
+  --color-cispam-emerald-dark: #047857;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+  }
+}

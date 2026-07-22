@@ -1,13 +1,49 @@
+{% load static %}
 <!doctype html>
-<html>
+<html lang="fr" class="h-full bg-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="./output.css" rel="stylesheet">
+  <title>{% block title %}CISPAM — Centre d'Intégration Scolaire et Professionnelle{% endblock title %}</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Tailwind CSS Output (v4) -->
+  <link href="{% static 'css/output.css' %}" rel="stylesheet">
+
+  {% block extra_css %}{% endblock extra_css %}
 </head>
-<body>
-  <h1 class="text-3xl font-bold underline">
-    Hello world!
-  </h1>
+<body class="h-full font-sans antialiased text-slate-800 bg-slate-100 flex flex-col min-h-screen">
+  
+  <!-- Notification / Alert Messages -->
+  {% if messages %}
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full px-4">
+      {% for message in messages %}
+        <div class="p-4 rounded-xl shadow-lg border flex items-center justify-between gap-3 text-sm font-medium transition-all {% if message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% elif message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-amber-50 border-amber-200 text-amber-800{% endif %}">
+          <div class="flex items-center gap-2">
+            {% if message.tags == 'error' %}<i class="fas fa-exclamation-circle text-rose-600"></i>
+            {% elif message.tags == 'success' %}<i class="fas fa-check-circle text-emerald-600"></i>
+            {% else %}<i class="fas fa-info-circle text-amber-600"></i>{% endif %}
+            <span>{{ message }}</span>
+          </div>
+          <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block body %}
+    {% block content %}{% endblock content %}
+  {% endblock body %}
+
+  {% block extra_js %}{% endblock extra_js %}
 </body>
 </html>
