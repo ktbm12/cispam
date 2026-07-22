@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "tailwindcss -i ./cispam/static/css/input.css -o ./cispam/static/css/output.css --watch",
-    "build": "tailwindcss -i ./cispam/static/css/input.css -o ./cispam/static/css/output.css --minify"
+    "build": "tailwindcss -i ./cispam/static/css/input.css -o ./cispam/static/css/output.css --minify",
+    "desktop": "python desktop.py"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.3.3",
