@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=cispam
+POSTGRES_USER=sFpCXBivoZNhibCVqhhqFdwucyKWUJyo
+POSTGRES_PASSWORD=EfHYHxlFaJCFeqlJo9FqjU4nwT46EGHIG4vAvLoZwhsNl9G3DlQbmV9OBB4DvjDn
