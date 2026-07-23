@@ -637,16 +637,26 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
         recu = self.get_object()
         inscription = recu.paiement.inscription
 
-        # Tous les versements de cette inscription, triés chronologiquement
-        tous_paiements = inscription.paiements.filter(
-            is_deleted=False
-        ).order_by("date_paiement", "created")
+        # ── IMMUTABILITÉ DU REÇU ─────────────────────────────────────────────────
+        # On ne charge QUE les paiements jusqu'à CE paiement (inclus),
+        # triés chronologiquement. Ainsi un reçu ne change JAMAIS après impression.
+        tous_paiements_chrono = list(
+            inscription.paiements.filter(is_deleted=False)
+            .order_by("date_paiement", "created")
+        )
 
-        # Calcul des cumuls et restes ligne par ligne pour le relevé
+        # Conserver uniquement jusqu'au paiement courant (inclus)
+        paiements_snapshot = []
+        for p in tous_paiements_chrono:
+            paiements_snapshot.append(p)
+            if p.pk == recu.paiement.pk:
+                break  # On s'arrête ici — les paiements futurs sont ignorés
+
+        # ── Calcul des cumuls et restes ligne par ligne ───────────────────────────
         paiements_avec_cumuls = []
         cumul_courant = 0
         total_pension = float(inscription.frais_total)
-        for p in tous_paiements:
+        for p in paiements_snapshot:
             cumul_courant += float(p.montant)
             reste = max(0, total_pension - cumul_courant)
             paiements_avec_cumuls.append({
@@ -657,12 +667,13 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
                 "est_solde_ligne": cumul_courant >= total_pension,
             })
 
-        # Récapitulatif pension
-        cumul_total_paye = float(inscription.montant_paye)
-        solde_restant = max(0, total_pension - cumul_total_paye)
-        est_solde = cumul_total_paye >= total_pension
+        # ── Totaux au moment de CE paiement (instantané) ─────────────────────────
+        # cumul_snapshot = total versé jusqu'à CE reçu inclus
+        cumul_snapshot = cumul_courant  # déjà calculé ci-dessus
+        solde_restant = max(0, total_pension - cumul_snapshot)
+        est_solde = cumul_snapshot >= total_pension
 
-        # ── Statut par tranche (pour afficher les 3 tranches même si un seul versement) ──
+        # ── Statut des tranches basé sur le cumul SNAPSHOT ───────────────────────
         try:
             frais_cfg = FraisScolarite.objects.get(
                 classe=inscription.classe,
@@ -677,8 +688,7 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
             t3 = total_pension - t1 - t2
 
         def _statut_tranche(seuil_debut, montant_tranche):
-            """Retourne (montant_couvert, pourcentage, est_soldee)."""
-            couvert = max(0, min(cumul_total_paye - seuil_debut, montant_tranche))
+            couvert = max(0, min(cumul_snapshot - seuil_debut, montant_tranche))
             pct = round(couvert / montant_tranche * 100, 0) if montant_tranche > 0 else 0
             return couvert, int(pct), couvert >= montant_tranche
 
@@ -692,20 +702,20 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
             {"label": "Tranche 3 (Solde)",        "montant": t3, "couvert": t3_couvert, "pct": t3_pct, "soldee": t3_soldee},
         ]
 
-        # Cumul avant ce paiement
-        cumul_avant_ce_paiement = cumul_total_paye - float(recu.paiement.montant)
+        cumul_avant_ce_paiement = cumul_snapshot - float(recu.paiement.montant)
 
         context.update({
             "montant_lettres": f"{amount_to_words_fr(int(recu.paiement.montant)).capitalize()} Francs CFA",
             "paiements_avec_cumuls": paiements_avec_cumuls,
             "total_pension": total_pension,
-            "cumul_total_paye": cumul_total_paye,
+            "cumul_total_paye": cumul_snapshot,
             "solde_restant": solde_restant,
             "est_solde": est_solde,
             "cumul_avant_ce_paiement": cumul_avant_ce_paiement,
             "statut_tranches": statut_tranches,
         })
         return context
+
 
 
 
