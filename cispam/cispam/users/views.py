@@ -658,10 +658,39 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
             })
 
         # Récapitulatif pension
-        total_pension = float(inscription.frais_total)
         cumul_total_paye = float(inscription.montant_paye)
         solde_restant = max(0, total_pension - cumul_total_paye)
         est_solde = cumul_total_paye >= total_pension
+
+        # ── Statut par tranche (pour afficher les 3 tranches même si un seul versement) ──
+        try:
+            frais_cfg = FraisScolarite.objects.get(
+                classe=inscription.classe,
+                annee_scolaire=inscription.annee_scolaire
+            )
+            t1 = float(frais_cfg.montant_tranche_1)
+            t2 = float(frais_cfg.montant_tranche_2)
+            t3 = max(0, float(frais_cfg.montant_total) - t1 - t2)
+        except Exception:
+            t1 = total_pension / 3
+            t2 = total_pension / 3
+            t3 = total_pension - t1 - t2
+
+        def _statut_tranche(seuil_debut, montant_tranche):
+            """Retourne (montant_couvert, pourcentage, est_soldee)."""
+            couvert = max(0, min(cumul_total_paye - seuil_debut, montant_tranche))
+            pct = round(couvert / montant_tranche * 100, 0) if montant_tranche > 0 else 0
+            return couvert, int(pct), couvert >= montant_tranche
+
+        t1_couvert, t1_pct, t1_soldee = _statut_tranche(0, t1)
+        t2_couvert, t2_pct, t2_soldee = _statut_tranche(t1, t2)
+        t3_couvert, t3_pct, t3_soldee = _statut_tranche(t1 + t2, t3)
+
+        statut_tranches = [
+            {"label": "Tranche 1 (Inscription)", "montant": t1, "couvert": t1_couvert, "pct": t1_pct, "soldee": t1_soldee},
+            {"label": "Tranche 2",               "montant": t2, "couvert": t2_couvert, "pct": t2_pct, "soldee": t2_soldee},
+            {"label": "Tranche 3 (Solde)",        "montant": t3, "couvert": t3_couvert, "pct": t3_pct, "soldee": t3_soldee},
+        ]
 
         # Cumul avant ce paiement
         cumul_avant_ce_paiement = cumul_total_paye - float(recu.paiement.montant)
@@ -674,8 +703,10 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
             "solde_restant": solde_restant,
             "est_solde": est_solde,
             "cumul_avant_ce_paiement": cumul_avant_ce_paiement,
+            "statut_tranches": statut_tranches,
         })
         return context
+
 
 
 recu_detail_view = RecuDetailView.as_view()

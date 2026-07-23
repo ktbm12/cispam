@@ -200,6 +200,69 @@
               <p class="text-amber-300">{{ solde_restant|floatformat:0 }} FCFA</p>
             {% endif %}
           </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== STATUT DES TRANCHES ===================== -->
+      <div class="border border-slate-200 rounded-xl overflow-hidden text-[11px]">
+        <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+          <span class="font-extrabold text-[10px] uppercase tracking-widest text-slate-600">Statut de Chaque Tranche</span>
+          {% if est_solde %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <i class="fas fa-check-circle"></i> Pension Intégralement Soldée
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+              <i class="fas fa-hourglass-half"></i> Paiement en cours
+            </span>
+          {% endif %}
+        </div>
+        <div class="divide-y divide-slate-100">
+          {% for t in statut_tranches %}
+            <div class="px-4 py-3 flex items-center gap-4">
+              <!-- Icône statut -->
+              <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black
+                {% if t.soldee %}bg-emerald-100 text-emerald-700{% elif t.pct > 0 %}bg-amber-100 text-amber-700{% else %}bg-slate-100 text-slate-400{% endif %}">
+                {% if t.soldee %}
+                  <i class="fas fa-check"></i>
+                {% elif t.pct > 0 %}
+                  <i class="fas fa-minus"></i>
+                {% else %}
+                  <i class="fas fa-clock"></i>
+                {% endif %}
+              </div>
+              <!-- Infos tranche -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold text-slate-800 text-[11px]">{{ t.label }}</span>
+                  <span class="font-mono font-black text-[11px]
+                    {% if t.soldee %}text-emerald-700{% elif t.pct > 0 %}text-amber-700{% else %}text-slate-400{% endif %}">
+                    {% if t.soldee %}
+                      SOLDÉE ✓
+                    {% elif t.pct > 0 %}
+                      {{ t.couvert|floatformat:0 }} / {{ t.montant|floatformat:0 }} FCFA
+                    {% else %}
+                      En attente
+                    {% endif %}
+                  </span>
+                </div>
+                <!-- Barre de progression -->
+                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div class="h-1.5 rounded-full transition-all duration-500
+                    {% if t.soldee %}bg-emerald-500{% elif t.pct > 0 %}bg-amber-400{% else %}bg-slate-300{% endif %}"
+                    style="width: {{ t.pct }}%"></div>
+                </div>
+                <p class="text-[9px] text-slate-400 mt-0.5 font-mono">
+                  {% if t.soldee %}
+                    {{ t.montant|floatformat:0 }} FCFA — Intégralement couverte
+                  {% else %}
+                    {{ t.montant|floatformat:0 }} FCFA — {{ t.pct }}% couvert
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+          {% endfor %}
         </div>
       </div>
 
