@@ -162,9 +162,39 @@
     </div>
 
     <!-- ===================== SITUATION FINANCIÈRE (BILAN) ===================== -->
-    <!-- On remplace le long tableau chronologique par un récapitulatif net et précis -->
     <div class="mb-10">
-      <p class="text-xs uppercase font-bold tracking-wider text-slate-800 border-b-2 border-slate-800 pb-1 mb-3">Situation Financière Globale</p>
+      <p class="text-xs uppercase font-bold tracking-wider text-slate-800 border-b-2 border-slate-800 pb-1 mb-3">Situation Financière Globale & Historique</p>
+      
+      <!-- Historique des versements -->
+      <div class="mb-4">
+        <table class="w-full text-left text-[11px] md:text-xs font-medium border border-slate-300">
+          <thead class="bg-slate-100 print-bg-transparent border-b border-slate-300 font-bold text-slate-800">
+            <tr>
+              <th class="py-1.5 px-2 border-r border-slate-300">Date</th>
+              <th class="py-1.5 px-2 border-r border-slate-300">Référence</th>
+              <th class="py-1.5 px-2 text-right border-r border-slate-300">Montant</th>
+              <th class="py-1.5 px-2 text-right">Reste à payer</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            {% for item in paiements_avec_cumuls %}
+            <tr class="{% if item.est_courant %}bg-slate-100 print-bg-transparent font-bold{% endif %}">
+              <td class="py-1.5 px-2 border-r border-slate-300">{{ item.paiement.date_paiement|date:"d/m/Y" }}</td>
+              <td class="py-1.5 px-2 border-r border-slate-300">
+                {{ item.paiement.reference }} 
+                {% if item.est_courant %} <span class="text-[10px] ml-1">(Ce reçu)</span>{% endif %}
+              </td>
+              <td class="py-1.5 px-2 text-right border-r border-slate-300">{{ item.paiement.montant|floatformat:0 }} FCFA</td>
+              <td class="py-1.5 px-2 text-right">
+                {% if item.est_solde_ligne %}Soldé ✓{% else %}{{ item.reste_apres|floatformat:0 }} FCFA{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Récapitulatif Final -->
       <div class="grid grid-cols-3 gap-4 border border-slate-300 bg-slate-50 print-bg-transparent divide-x divide-slate-300 text-center py-3">
         <div>
           <p class="text-xs font-semibold text-slate-500 uppercase">Pension Totale</p>
