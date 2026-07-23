@@ -528,8 +528,8 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
         inscription_id = request.POST.get("inscription_id")
         montant = request.POST.get("montant")
         mode_paiement = request.POST.get("mode_paiement", ModePaiementEnum.ESPECES)
-        tranche = request.POST.get("tranche", TrancheEnum.TRANCHE_1)
         reference_transaction = request.POST.get("reference_transaction", "").strip()
+        notes = request.POST.get("notes", "").strip()
 
         if not inscription_id or not montant:
             messages.error(request, "Veuillez préciser l'inscription et le montant du paiement.")
@@ -538,29 +538,51 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
         inscription = get_object_or_404(Inscription, pk=inscription_id)
 
         try:
-            montant_num = float(montant)
+            montant_num = float(str(montant).replace(",", ".").replace(" ", ""))
             if montant_num <= 0:
                 messages.error(request, "Le montant doit être supérieur à 0 FCFA.")
                 return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
 
-            # Détermination hiérarchique automatique de la tranche
-            cumul_avant = sum(p.montant for p in inscription.paiements.all())
+            # ── Détermination de la tranche basée sur le CUMUL APRÈS paiement ─────────────
+            # Pas de restriction de montant. La tranche reflète la portion de la
+            # pension couverte par ce versement.
+            cumul_avant = float(sum(p.montant for p in inscription.paiements.filter(is_deleted=False)))
+            cumul_apres = cumul_avant + montant_num
+
             try:
                 from cispam.users.models import FraisScolarite
-                frais_cfg = FraisScolarite.objects.get(classe=inscription.classe, annee_scolaire=inscription.annee_scolaire)
-                t1 = frais_cfg.montant_tranche_1
-                t2 = frais_cfg.montant_tranche_2
+                frais_cfg = FraisScolarite.objects.get(
+                    classe=inscription.classe,
+                    annee_scolaire=inscription.annee_scolaire
+                )
+                t1 = float(frais_cfg.montant_tranche_1)
+                t2 = float(frais_cfg.montant_tranche_2)
+                total_pension = float(frais_cfg.montant_total)
             except Exception:
-                t1, t2 = 50000, 50000
+                total_pension = float(inscription.frais_total) or 150000
+                t1 = total_pension / 3
+                t2 = total_pension / 3
 
-            if cumul_avant < t1:
-                tranche_auto = TrancheEnum.TRANCHE_1
-            elif cumul_avant < (t1 + t2):
+            # Règle : la tranche est déterminée par où se situe le cumul AVANT
+            # ce versement (quelle tranche est en train d’être alimentée)
+            # Plusieurs paiements peuvent tomber sur la même tranche sans restriction.
+            if cumul_avant >= (t1 + t2):
+                # Déjà au-delà de T1+T2 : c'est la tranche 3
+                tranche_auto = TrancheEnum.TRANCHE_3
+            elif cumul_avant >= t1:
+                # Déjà au-delà de T1 : c'est la tranche 2
                 tranche_auto = TrancheEnum.TRANCHE_2
             else:
-                tranche_auto = TrancheEnum.TRANCHE_3
+                # En-deçà de T1 : tranche 1
+                # Si le montant couvre d’un coup toute la pension, on la marque TRANCHE_3
+                if cumul_apres >= total_pension:
+                    tranche_auto = TrancheEnum.TRANCHE_3
+                elif cumul_apres >= (t1 + t2):
+                    tranche_auto = TrancheEnum.TRANCHE_2
+                else:
+                    tranche_auto = TrancheEnum.TRANCHE_1
 
-            # 1. Création du paiement avec tranche calculée automatiquement
+            # 1. Création du paiement
             paiement = Paiement.objects.create(
                 inscription=inscription,
                 montant=montant_num,
@@ -581,13 +603,19 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
                 statut=StatutRecuEnum.GENERE,
             )
 
+            # Solde après ce paiement
+            solde_restant = max(0, float(inscription.frais_total) - cumul_apres)
+            solde_label = f"Soldé ✅" if solde_restant == 0 else f"Reste : {solde_restant:,.0f} FCFA"
+
             messages.success(
                 request,
-                f"Encaissement de {montant_num:,.0f} FCFA enregistré ! <a href='/recus/{recu.pk}/' target='_blank' class='font-black underline ml-1'>Imprimer / Télécharger le Reçu N° {recu.numero_recu}</a>"
+                f"Encaissement de {montant_num:,.0f} FCFA enregistré ! {solde_label} "
+                f"<a href='/recus/{recu.pk}/' target='_blank' class='font-black underline ml-1'>"
+                f"Imprimer le Reçu N° {recu.numero_recu}</a>"
             )
 
         except Exception as e:
-            messages.error(request, f"Erreur lors de l'enregistrement du paiement : {e}")
+            messages.error(request, f"Erreur lors de l'enregistrement du paiement : {e}")
 
         return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
 
@@ -605,17 +633,47 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        from cispam.users.models import FraisScolarite
         recu = self.get_object()
         inscription = recu.paiement.inscription
 
-        # Récapitulatif chronologique de tous les versements de l'élève jusqu'à ce reçu
-        historique_paiements = inscription.paiements.filter(
-            date_paiement__lte=recu.paiement.date_paiement
-        ).order_by("date_paiement")
+        # Tous les versements de cette inscription, triés chronologiquement
+        tous_paiements = inscription.paiements.filter(
+            is_deleted=False
+        ).order_by("date_paiement", "created")
+
+        # Calcul des cumuls et restes ligne par ligne pour le relevé
+        paiements_avec_cumuls = []
+        cumul_courant = 0
+        total_pension = float(inscription.frais_total)
+        for p in tous_paiements:
+            cumul_courant += float(p.montant)
+            reste = max(0, total_pension - cumul_courant)
+            paiements_avec_cumuls.append({
+                "paiement": p,
+                "est_courant": p.pk == recu.paiement.pk,
+                "cumul_apres": cumul_courant,
+                "reste_apres": reste,
+                "est_solde_ligne": cumul_courant >= total_pension,
+            })
+
+        # Récapitulatif pension
+        total_pension = float(inscription.frais_total)
+        cumul_total_paye = float(inscription.montant_paye)
+        solde_restant = max(0, total_pension - cumul_total_paye)
+        est_solde = cumul_total_paye >= total_pension
+
+        # Cumul avant ce paiement
+        cumul_avant_ce_paiement = cumul_total_paye - float(recu.paiement.montant)
 
         context.update({
-            "montant_lettres": f"{amount_to_words_fr(recu.paiement.montant).capitalize()} Francs CFA",
-            "historique_paiements": historique_paiements,
+            "montant_lettres": f"{amount_to_words_fr(int(recu.paiement.montant)).capitalize()} Francs CFA",
+            "paiements_avec_cumuls": paiements_avec_cumuls,
+            "total_pension": total_pension,
+            "cumul_total_paye": cumul_total_paye,
+            "solde_restant": solde_restant,
+            "est_solde": est_solde,
+            "cumul_avant_ce_paiement": cumul_avant_ce_paiement,
         })
         return context
 
