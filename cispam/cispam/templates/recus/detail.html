@@ -13,28 +13,38 @@
     /* Format optimal pour le reçu (A5 Portrait ou demi-A4) */
     @page {
       size: A5 portrait;
-      margin: 1cm;
+      margin: 0.5cm;
     }
-    body { 
+    html, body { 
       background-color: white !important; 
-      margin: 0;
+      margin: 0 !important;
+      padding: 0 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 11pt !important; /* Taille de base légèrement réduite pour tout faire tenir */
+    }
+    .min-h-screen { 
+      min-height: unset !important;
+      padding: 0 !important; 
+      margin: 0 !important; 
+      background-color: white !important;
     }
     /* Forcer le noir et blanc / niveaux de gris pour l'imprimante */
     .printable-ticket {
-      border: 1px solid #000 !important;
+      border: 2px solid #000 !important;
       box-shadow: none !important;
-      margin: 0 !important;
+      margin: 0 auto !important;
+      padding: 10px 15px !important;
+      width: 100% !important;
       max-width: 100% !important;
       border-radius: 0 !important;
       color: #000 !important;
+      page-break-inside: avoid; /* Évite de couper le reçu sur 2 pages */
     }
     .printable-ticket * {
       color: #000 !important;
       border-color: #000 !important;
     }
-    .min-h-screen { min-height: unset !important; }
     
     /* Enlever les fonds colorés pour économiser l'encre */
     .print-bg-transparent {
