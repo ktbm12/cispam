@@ -24,13 +24,13 @@
         </button>
 
         <!-- Search Bar -->
-        <div class="relative max-w-xs w-full hidden sm:block">
+        <form action="{% url 'recherche' %}" method="GET" class="relative max-w-xs w-full hidden sm:block">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">
             <i class="fas fa-search"></i>
           </div>
-          <input type="text" placeholder="Rechercher élève, matricule, reçu..."
+          <input id="search-global" type="text" name="q" placeholder="Rechercher élève, matricule..."
             class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white transition">
-        </div>
+        </form>
       </div>
 
       <!-- Header Actions -->
@@ -145,6 +145,65 @@
           <!-- Progress Bar -->
           <div class="w-full bg-slate-100 rounded-full h-2 mt-3 overflow-hidden">
             <div class="bg-gradient-to-r from-amber-500 to-emerald-500 h-2 rounded-full transition-all duration-500" style="width: {{ taux_recouvrement }}%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- STATS CAISSE DU JOUR / DU MOIS -->
+      <!-- ========================================================================= -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+        <!-- Card Caisse du Jour -->
+        <div class="relative bg-gradient-to-br from-emerald-900 to-emerald-800 rounded-2xl p-6 shadow-lg border border-emerald-700/60 overflow-hidden">
+          <div class="absolute -right-6 -top-6 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300 mb-0.5">Caisse du Jour</p>
+                <p class="text-[11px] text-emerald-400/70">{{ date_aujourd_hui|date:"l d F Y" }}</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-lg border border-emerald-500/30">
+                <i class="fas fa-sun"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-1.5 mb-3">
+              <span class="text-3xl font-black text-white font-mono">{{ total_encaisse_jour|default:"0" }}</span>
+              <span class="text-sm font-bold text-emerald-300">FCFA</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                <i class="fas fa-receipt text-emerald-300 text-[10px]"></i>
+                <span class="text-[11px] font-bold text-emerald-200">{{ nb_recus_jour }} reçu(s) émis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Caisse du Mois -->
+        <div class="relative bg-gradient-to-br from-sky-900 to-sky-800 rounded-2xl p-6 shadow-lg border border-sky-700/60 overflow-hidden">
+          <div class="absolute -right-6 -top-6 w-36 h-36 bg-sky-500/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-sky-300 mb-0.5">Caisse du Mois</p>
+                <p class="text-[11px] text-sky-400/70">{{ date_aujourd_hui|date:"F Y" }}</p>
+              </div>
+              <div class="w-11 h-11 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center text-lg border border-sky-500/30">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+            </div>
+            <div class="flex items-baseline gap-1.5 mb-3">
+              <span class="text-3xl font-black text-white font-mono">{{ total_encaisse_mois|default:"0" }}</span>
+              <span class="text-sm font-bold text-sky-300">FCFA</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/20 border border-sky-500/30">
+                <i class="fas fa-receipt text-sky-300 text-[10px]"></i>
+                <span class="text-[11px] font-bold text-sky-200">{{ nb_recus_mois }} reçu(s) émis</span>
+              </div>
+            </div>
           </div>
         </div>
 

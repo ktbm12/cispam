@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Recherche — CISPAM{% endblock title %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800">
+
+  {% include "includes/sidebar.html" %}
+
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 flex items-center justify-between shadow-xs">
+      <div class="flex items-center gap-4">
+        <button class="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg border border-slate-200">
+          <i class="fas fa-bars"></i>
+        </button>
+        <form action="{% url 'recherche' %}" method="GET" class="relative w-72">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">
+            <i class="fas fa-search"></i>
+          </div>
+          <input id="search-global-result" type="text" name="q" value="{{ q }}"
+            placeholder="Nom, prénom, matricule..."
+            class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white transition"
+            autofocus>
+        </form>
+      </div>
+      <a href="{% url 'dashboard' %}" class="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1.5 font-medium">
+        <i class="fas fa-arrow-left"></i> Retour au Dashboard
+      </a>
+    </header>
+
+    <main class="p-6 sm:p-8 space-y-6 max-w-6xl w-full mx-auto">
+
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-900 font-display">Résultats de Recherche</h2>
+          {% if q %}
+            <p class="text-xs text-slate-400 mt-1">
+              <span class="font-semibold text-amber-600">{{ resultats|length }}</span> résultat(s) pour
+              <span class="font-black text-slate-700">"{{ q }}"</span>
+            </p>
+          {% else %}
+            <p class="text-xs text-slate-400 mt-1">Entrez un terme dans la barre de recherche ci-dessus.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if q %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
+                <tr>
+                  <th class="py-3.5 px-6">Matricule</th>
+                  <th class="py-3.5 px-6">Nom &amp; Prénom</th>
+                  <th class="py-3.5 px-6">Sexe</th>
+                  <th class="py-3.5 px-6">Classe(s)</th>
+                  <th class="py-3.5 px-6">Statut</th>
+                  <th class="py-3.5 px-6 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                {% for eleve in resultats %}
+                  {% with derniere_inscription=eleve.inscriptions.last %}
+                  <tr class="hover:bg-slate-50/80 transition">
+                    <td class="py-4 px-6">
+                      <span class="font-mono font-bold text-slate-900 text-[11px] bg-slate-100 px-2 py-0.5 rounded-md">
+                        {{ eleve.matricule|default:"—" }}
+                      </span>
+                    </td>
+                    <td class="py-4 px-6">
+                      <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-black text-sm shrink-0">
+                          {{ eleve.prenom|first|upper }}
+                        </div>
+                        <div>
+                          <p class="font-bold text-slate-900">{{ eleve.nom_complet }}</p>
+                          {% if eleve.date_naissance %}
+                            <p class="text-[10px] text-slate-400">Né(e) le {{ eleve.date_naissance|date:"d/m/Y" }}</p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-4 px-6 text-slate-500">{{ eleve.get_sexe_display|default:"—" }}</td>
+                    <td class="py-4 px-6">
+                      {% if derniere_inscription %}
+                        <span class="font-semibold text-slate-800">{{ derniere_inscription.classe.nom }}</span>
+                        <p class="text-[10px] text-slate-400">{{ derniere_inscription.annee_scolaire.libelle }}</p>
+                      {% else %}
+                        <span class="text-slate-400">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-4 px-6">
+                      {% if derniere_inscription %}
+                        {% if derniere_inscription.statut == "en_cours" %}
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En cours
+                          </span>
+                        {% elif derniere_inscription.statut == "terminee" %}
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">Terminée</span>
+                        {% else %}
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">{{ derniere_inscription.get_statut_display }}</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-slate-400 text-[10px]">Pas d'inscription</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                      <a href="{% url 'inscriptions_list' %}?q={{ eleve.matricule }}"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 transition border border-sky-200">
+                        <i class="fas fa-folder-open"></i> Dossier
+                      </a>
+                    </td>
+                  </tr>
+                  {% endwith %}
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="py-16 text-center">
+                      <div class="flex flex-col items-center gap-3 text-slate-400">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+                          <i class="fas fa-user-slash"></i>
+                        </div>
+                        <div>
+                          <p class="font-bold text-slate-600 text-sm">Aucun élève trouvé</p>
+                          <p class="text-xs mt-0.5">Aucun résultat pour <strong>"{{ q }}"</strong>.</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div class="flex flex-col items-center gap-4 py-24 text-slate-400">
+          <div class="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center text-4xl">
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="text-center">
+            <p class="font-bold text-slate-600 text-base">Recherche globale des élèves</p>
+            <p class="text-sm mt-1">Entrez un <strong>nom</strong>, un <strong>prénom</strong> ou un <strong>matricule</strong>.</p>
+          </div>
+        </div>
+      {% endif %}
+
+    </main>
+  </div>
+</div>
+{% endblock body %}

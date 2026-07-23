@@ -7,6 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView
+from django.views.generic import ListView
 from django.views.generic import RedirectView
 from django.views.generic import TemplateView
 from django.views.generic import UpdateView
@@ -57,7 +58,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from django.db.models import Sum
-        from cispam.users.models import AnneeScolaire, Eleve, Inscription, Paiement
+        from django.utils import timezone
+        from cispam.users.models import AnneeScolaire, Eleve, Inscription, Paiement, Recu
 
         try:
             annee = AnneeScolaire.objects.get(est_active=True)
@@ -76,6 +78,21 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         taux_recouvrement = round((total_paye / total_frais * 100), 1) if total_frais > 0 else 0
 
+        # ── Stats Caisse Jour / Mois ─────────────────────────────────────────────
+        now = timezone.localdate()
+        paiements_jour = paiements.filter(date_paiement__date=now)
+        paiements_mois = paiements.filter(
+            date_paiement__year=now.year,
+            date_paiement__month=now.month,
+        )
+        total_encaisse_jour = paiements_jour.aggregate(t=Sum("montant"))["t"] or 0
+        total_encaisse_mois = paiements_mois.aggregate(t=Sum("montant"))["t"] or 0
+        nb_recus_jour = Recu.objects.filter(created__date=now).count()
+        nb_recus_mois = Recu.objects.filter(
+            created__year=now.year,
+            created__month=now.month,
+        ).count()
+
         context.update({
             "annee_active": annee,
             "total_eleves": total_eleves,
@@ -84,8 +101,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             "total_paye": total_paye,
             "total_solde": total_solde,
             "taux_recouvrement": taux_recouvrement,
-            "derniers_paiements": paiements.select_related("inscription__eleve", "inscription__classe")[:5],
+            "derniers_paiements": paiements.select_related("inscription__eleve", "inscription__classe").order_by("-date_paiement")[:8],
             "derniere_inscriptions": inscriptions.select_related("eleve", "classe")[:5],
+            # Caisse
+            "total_encaisse_jour": total_encaisse_jour,
+            "total_encaisse_mois": total_encaisse_mois,
+            "nb_recus_jour": nb_recus_jour,
+            "nb_recus_mois": nb_recus_mois,
+            "date_aujourd_hui": now,
         })
         return context
 
@@ -600,5 +623,85 @@ class RecuDetailView(LoginRequiredMixin, DetailView):
 recu_detail_view = RecuDetailView.as_view()
 
 
+# ==============================================================================
+# VUES — RECHERCHE GLOBALE ÉLÈVES
+# ==============================================================================
+
+class RechercheEleveView(LoginRequiredMixin, TemplateView):
+    template_name = "recherche/resultats.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.db.models import Q
+        from cispam.users.models import Eleve
+
+        q = self.request.GET.get("q", "").strip()
+        resultats = []
+        if q:
+            resultats = (
+                Eleve.objects.filter(is_deleted=False)
+                .filter(
+                    Q(matricule__icontains=q)
+                    | Q(nom__icontains=q)
+                    | Q(prenom__icontains=q)
+                )
+                .prefetch_related("inscriptions__classe", "inscriptions__annee_scolaire")
+                .order_by("nom", "prenom")
+            )
+        context["q"] = q
+        context["resultats"] = resultats
+        return context
 
 
+recherche_view = RechercheEleveView.as_view()
+
+
+# ==============================================================================
+# VUES — LISTE DES REÇUS
+# ==============================================================================
+
+class RecuListView(LoginRequiredMixin, ListView):
+    template_name = "recus/index.html"
+    context_object_name = "recus"
+    paginate_by = 20
+
+    def get_queryset(self):
+        from django.db.models import Q
+        from cispam.users.models import Recu
+
+        qs = (
+            Recu.objects.all()
+            .select_related(
+                "paiement__inscription__eleve",
+                "paiement__inscription__classe",
+                "paiement__inscription__annee_scolaire",
+            )
+            .order_by("-created")
+        )
+
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            qs = qs.filter(
+                Q(numero_recu__icontains=q)
+                | Q(paiement__inscription__eleve__nom__icontains=q)
+                | Q(paiement__inscription__eleve__prenom__icontains=q)
+                | Q(paiement__inscription__eleve__matricule__icontains=q)
+            )
+
+        classe_id = self.request.GET.get("classe", "").strip()
+        if classe_id:
+            qs = qs.filter(paiement__inscription__classe__pk=classe_id)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from cispam.users.models import Classe
+
+        context["classes"] = Classe.objects.filter(is_deleted=False).select_related("niveau").order_by("niveau__nom", "nom")
+        context["q"] = self.request.GET.get("q", "")
+        context["classe_filtre"] = self.request.GET.get("classe", "")
+        return context
+
+
+recu_list_view = RecuListView.as_view()

@@ -70,15 +70,15 @@
     <div class="space-y-1">
       <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">Caisse & Finances</p>
 
-      <a href="{% url 'admin:users_paiement_changelist' %}"
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
-        <i class="fas fa-cash-register text-sm text-emerald-400 w-5"></i>
+      <a href="{% url 'inscriptions_list' %}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if 'paiements' in request.resolver_match.url_name %}bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20{% else %}text-slate-300 hover:text-white hover:bg-slate-800{% endif %}">
+        <i class="fas fa-cash-register text-sm {% if 'paiements' not in request.resolver_match.url_name %}text-emerald-400{% endif %} w-5"></i>
         <span>Encaissements (Caisse)</span>
       </a>
 
-      <a href="{% url 'admin:users_recu_changelist' %}"
-        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition">
-        <i class="fas fa-receipt text-sm text-teal-400 w-5"></i>
+      <a href="{% url 'recu_list' %}"
+        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition {% if request.resolver_match.url_name == 'recu_list' or request.resolver_match.url_name == 'recu_detail' %}bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20{% else %}text-slate-300 hover:text-white hover:bg-slate-800{% endif %}">
+        <i class="fas fa-receipt text-sm {% if request.resolver_match.url_name != 'recu_list' and request.resolver_match.url_name != 'recu_detail' %}text-teal-400{% endif %} w-5"></i>
         <span>Reçus Officiels</span>
       </a>
 

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Reçus Officiels — CISPAM{% endblock title %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-100 flex font-sans antialiased text-slate-800">
+
+  {% include "includes/sidebar.html" %}
+
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+    <!-- Top Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 flex items-center justify-between shadow-xs">
+      <div class="flex items-center gap-4">
+        <button class="md:hidden p-2 text-slate-600 hover:text-slate-900 rounded-lg border border-slate-200">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div>
+          <h1 class="text-base font-extrabold text-slate-900">Reçus Officiels</h1>
+          <p class="text-[11px] text-slate-400">Tous les reçus émis, filtrables par classe ou par élève</p>
+        </div>
+      </div>
+      <a href="{% url 'inscriptions_list' %}"
+        class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition shadow-sm flex items-center gap-1.5">
+        <i class="fas fa-cash-register"></i>
+        <span>Encaisser</span>
+      </a>
+    </header>
+
+    <!-- Main -->
+    <main class="p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+      <!-- Filters Bar -->
+      <form method="GET" action="{% url 'recu_list' %}" class="flex flex-wrap gap-3 items-end">
+        <div class="flex-1 min-w-[220px]">
+          <label for="filter-q" class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Recherche</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-xs">
+              <i class="fas fa-search"></i>
+            </div>
+            <input id="filter-q" type="text" name="q" value="{{ q }}"
+              placeholder="N° reçu, nom, matricule..."
+              class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition shadow-xs">
+          </div>
+        </div>
+
+        <div class="min-w-[180px]">
+          <label for="filter-classe" class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Classe</label>
+          <select id="filter-classe" name="classe"
+            class="w-full py-2.5 px-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-amber-500 transition shadow-xs">
+            <option value="">Toutes les classes</option>
+            {% for classe in classes %}
+              <option value="{{ classe.pk }}" {% if classe_filtre == classe.pk|stringformat:"s" %}selected{% endif %}>
+                {{ classe.niveau.nom }} — {{ classe.nom }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit"
+          class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+          <i class="fas fa-filter"></i> Filtrer
+        </button>
+
+        {% if q or classe_filtre %}
+          <a href="{% url 'recu_list' %}"
+            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition flex items-center gap-1.5">
+            <i class="fas fa-times"></i> Réinitialiser
+          </a>
+        {% endif %}
+      </form>
+
+      <!-- Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Registre des Reçus</h3>
+            <p class="text-xs text-slate-400 mt-0.5">
+              {% if is_paginated %}
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }} —
+              {% endif %}
+              {{ paginator.count|default:recus|length }} reçu(s) au total
+            </p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-100 text-slate-400 uppercase tracking-wider font-semibold">
+              <tr>
+                <th class="py-3.5 px-5">N° Reçu</th>
+                <th class="py-3.5 px-5">Date</th>
+                <th class="py-3.5 px-5">Élève</th>
+                <th class="py-3.5 px-5">Classe</th>
+                <th class="py-3.5 px-5">Tranche</th>
+                <th class="py-3.5 px-5">Mode</th>
+                <th class="py-3.5 px-5 text-right">Montant (FCFA)</th>
+                <th class="py-3.5 px-5 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              {% for recu in recus %}
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="py-4 px-5">
+                    <span class="font-mono font-bold text-slate-900 text-[11px]">{{ recu.numero_recu }}</span>
+                  </td>
+                  <td class="py-4 px-5 text-slate-500">
+                    {{ recu.created|date:"d/m/Y" }}
+                    <span class="block text-[10px] text-slate-400">{{ recu.created|date:"H:i" }}</span>
+                  </td>
+                  <td class="py-4 px-5">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-black text-xs shrink-0">
+                        {{ recu.paiement.inscription.eleve.prenom|first|upper }}
+                      </div>
+                      <div>
+                        <p class="font-semibold text-slate-800">{{ recu.paiement.inscription.eleve.nom_complet }}</p>
+                        <p class="text-[10px] text-slate-400 font-mono">{{ recu.paiement.inscription.eleve.matricule|default:"—" }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-5 text-slate-600 font-medium">
+                    {{ recu.paiement.inscription.classe.nom }}
+                    <p class="text-[10px] text-slate-400">{{ recu.paiement.inscription.annee_scolaire.libelle }}</p>
+                  </td>
+                  <td class="py-4 px-5">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                      {{ recu.paiement.get_tranche_display }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-5">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">
+                      {{ recu.paiement.get_mode_paiement_display }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-5 text-right font-black text-emerald-600 font-mono">
+                    +{{ recu.paiement.montant|floatformat:0 }} FCFA
+                  </td>
+                  <td class="py-4 px-5 text-center">
+                    <a href="{% url 'recu_detail' recu.pk %}" target="_blank"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 transition border border-teal-200">
+                      <i class="fas fa-print"></i> Imprimer
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="8" class="py-16 text-center">
+                    <div class="flex flex-col items-center gap-3 text-slate-400">
+                      <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-3xl">
+                        <i class="fas fa-receipt"></i>
+                      </div>
+                      <div>
+                        <p class="font-bold text-slate-600 text-sm">Aucun reçu trouvé</p>
+                        <p class="text-xs mt-0.5">
+                          {% if q or classe_filtre %}
+                            Aucun résultat ne correspond à vos filtres.
+                          {% else %}
+                            Aucun reçu émis pour le moment.
+                          {% endif %}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+          <div class="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+            <p class="text-xs text-slate-400">
+              Affichage {{ page_obj.start_index }}–{{ page_obj.end_index }} sur {{ paginator.count }} reçus
+            </p>
+            <div class="flex items-center gap-1.5">
+              {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if classe_filtre %}&classe={{ classe_filtre }}{% endif %}"
+                  class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                  <i class="fas fa-chevron-left"></i>
+                </a>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                  <span class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-xs">{{ num }}</span>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                  <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if classe_filtre %}&classe={{ classe_filtre }}{% endif %}"
+                    class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">{{ num }}</a>
+                {% endif %}
+              {% endfor %}
+              {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if classe_filtre %}&classe={{ classe_filtre }}{% endif %}"
+                  class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                  <i class="fas fa-chevron-right"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock body %}
