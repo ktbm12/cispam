@@ -307,8 +307,14 @@
         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
           Montant encaissé (FCFA) *
         </label>
-        <input type="number" name="montant" id="modal-montant" required placeholder="ex: 50000" step="500" min="1"
+        <input type="text" inputmode="numeric" name="montant" id="modal-montant" required
+          placeholder="Saisir le montant en FCFA..."
           class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-slate-900 focus:outline-none focus:border-amber-500 transition">
+        <p id="modal-solde-hint" class="text-[11px] text-slate-400 mt-1 hidden">
+          <i class="fas fa-info-circle text-sky-400"></i>
+          Solde restant : <span id="modal-solde-restant" class="font-bold text-amber-600"></span> FCFA
+          &mdash; <button type="button" id="btn-solde-complet" class="text-sky-600 hover:underline font-bold text-[11px]" onclick="setSoldeComplet()">Payer le solde complet</button>
+        </p>
       </div>
 
       <div>
@@ -356,18 +362,43 @@
     }
   }
 
+  let _soldeRestant = 0;
+
+  function setSoldeComplet() {
+    const input = document.getElementById('modal-montant');
+    if (input && _soldeRestant > 0) {
+      input.value = _soldeRestant;
+      input.focus();
+    }
+  }
+
   function openPaymentModal(inscriptionId = '', candidateName = '', remainingBalance = 0) {
     const modal = document.getElementById('modal-paiement');
     const select = document.getElementById('modal-inscription-id');
     const montantInput = document.getElementById('modal-montant');
+    const hint = document.getElementById('modal-solde-hint');
+    const soldeSpan = document.getElementById('modal-solde-restant');
+
+    _soldeRestant = remainingBalance;
 
     if (inscriptionId && select) {
       select.value = inscriptionId;
     }
-    if (remainingBalance > 0 && montantInput) {
-      montantInput.value = remainingBalance;
-    } else if (montantInput) {
+
+    // Ne pas pré-remplir le montant — laisser l'utilisateur saisir librement
+    if (montantInput) {
       montantInput.value = '';
+      montantInput.focus();
+    }
+
+    // Afficher le solde restant comme information (pas comme contrainte)
+    if (hint && soldeSpan) {
+      if (remainingBalance > 0) {
+        soldeSpan.textContent = Number(remainingBalance).toLocaleString('fr-FR');
+        hint.classList.remove('hidden');
+      } else {
+        hint.classList.add('hidden');
+      }
     }
 
     if (modal) {
