@@ -293,6 +293,63 @@ class EtudiantsParClassePrintView(LoginRequiredMixin, TemplateView):
 etudiants_par_classe_print_view = EtudiantsParClassePrintView.as_view()
 
 
+class PaiementsParClassePrintView(LoginRequiredMixin, TemplateView):
+    template_name = "classes/print_paiements.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from cispam.users.models import AnneeScolaire, Inscription, StatutInscriptionEnum
+        from django.db.models import Sum, Q, Value, DecimalField, F, ExpressionWrapper
+        from django.db.models.functions import Coalesce
+
+        try:
+            annee_active = AnneeScolaire.objects.get(est_active=True)
+        except AnneeScolaire.DoesNotExist:
+            annee_active = None
+
+        classe_id = self.request.GET.get('classe')
+        
+        # Requête hautement optimisée pour récupérer toutes les inscriptions 
+        # avec leurs paiements cumulés via une seule jointure et annotation SQL
+        inscriptions = Inscription.objects.filter(
+            annee_scolaire=annee_active,
+            is_deleted=False,
+            statut=StatutInscriptionEnum.EN_COURS
+        )
+        
+        if classe_id:
+            inscriptions = inscriptions.filter(classe_id=classe_id)
+            
+        inscriptions = inscriptions.select_related(
+            'eleve', 'classe', 'classe__niveau'
+        ).annotate(
+            total_paye=Coalesce(
+                Sum('paiements__montant', filter=Q(paiements__is_deleted=False)),
+                Value(0, output_field=DecimalField())
+            )
+        ).annotate(
+            reste_a_payer=ExpressionWrapper(
+                F('frais_total') - F('total_paye'),
+                output_field=DecimalField()
+            )
+        ).order_by('classe__niveau__ordre', 'classe__nom', 'eleve__nom', 'eleve__prenom')
+
+        # Calculer le grand total global pour l'affichage synthétique
+        grand_total_frais = sum(ins.frais_total for ins in inscriptions)
+        grand_total_paye = sum(ins.total_paye for ins in inscriptions)
+        grand_total_reste = sum(ins.reste_a_payer for ins in inscriptions)
+
+        context['inscriptions'] = inscriptions
+        context['annee_active'] = annee_active
+        context['classe_id_filtre'] = classe_id
+        context['grand_total_frais'] = grand_total_frais
+        context['grand_total_paye'] = grand_total_paye
+        context['grand_total_reste'] = grand_total_reste
+        return context
+
+paiements_par_classe_print_view = PaiementsParClassePrintView.as_view()
+
+
 # ==============================================================================
 # VUES — GRILLE DES FRAIS DE SCOLARITÉ
 # ==============================================================================

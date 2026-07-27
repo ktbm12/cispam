@@ -12,6 +12,7 @@ from cispam.users.views import classes_create_view
 from cispam.users.views import classes_list_view
 from cispam.users.views import dashboard_view
 from cispam.users.views import etudiants_par_classe_print_view
+from cispam.users.views import paiements_par_classe_print_view
 from cispam.users.views import frais_create_view
 from cispam.users.views import frais_list_view
 from cispam.users.views import inscriptions_create_view
@@ -30,6 +31,7 @@ urlpatterns = [
     path("classes/", classes_list_view, name="classes_list"),
     path("classes/creer/", classes_create_view, name="classes_create"),
     path("classes/etudiants/imprimer/", etudiants_par_classe_print_view, name="classes_etudiants_print"),
+    path("classes/paiements/imprimer/", paiements_par_classe_print_view, name="classes_paiements_print"),
     path("frais/", frais_list_view, name="frais_list"),
     path("frais/creer/", frais_create_view, name="frais_create"),
     path("inscriptions/", inscriptions_list_view, name="inscriptions_list"),
