@@ -255,6 +255,44 @@ classes_list_view = ClasseListView.as_view()
 classes_create_view = ClasseCreateView.as_view()
 
 
+class EtudiantsParClassePrintView(LoginRequiredMixin, TemplateView):
+    template_name = "classes/print_etudiants.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from cispam.users.models import AnneeScolaire, Classe, Inscription, StatutInscriptionEnum
+        from django.db.models import Prefetch
+
+        try:
+            annee_active = AnneeScolaire.objects.get(est_active=True)
+        except AnneeScolaire.DoesNotExist:
+            annee_active = None
+
+        classe_id = self.request.GET.get('classe')
+        if classe_id:
+            classes = Classe.objects.filter(pk=classe_id, is_deleted=False).order_by('niveau__ordre', 'nom')
+        else:
+            classes = Classe.objects.filter(is_deleted=False).order_by('niveau__ordre', 'nom')
+
+        if annee_active:
+            inscriptions_prefetch = Prefetch(
+                'inscriptions',
+                queryset=Inscription.objects.filter(
+                    annee_scolaire=annee_active, 
+                    is_deleted=False,
+                    statut=StatutInscriptionEnum.EN_COURS
+                ).select_related('eleve').order_by('eleve__nom', 'eleve__prenom'),
+                to_attr='inscriptions_actives'
+            )
+            classes = classes.prefetch_related(inscriptions_prefetch)
+
+        context['classes'] = classes
+        context['annee_active'] = annee_active
+        return context
+
+etudiants_par_classe_print_view = EtudiantsParClassePrintView.as_view()
+
+
 # ==============================================================================
 # VUES — GRILLE DES FRAIS DE SCOLARITÉ
 # ==============================================================================
