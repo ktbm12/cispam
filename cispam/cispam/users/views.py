@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import django.views.generic
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -348,6 +349,126 @@ class PaiementsParClassePrintView(LoginRequiredMixin, TemplateView):
         return context
 
 paiements_par_classe_print_view = PaiementsParClassePrintView.as_view()
+
+
+class ExportPaiementsExcelView(LoginRequiredMixin, django.views.generic.View):
+    def get(self, request, *args, **kwargs):
+        from django.http import HttpResponse
+        from cispam.users.models import AnneeScolaire, Inscription, StatutInscriptionEnum
+        from django.db.models import Sum, Q, Value, DecimalField, F, ExpressionWrapper
+        from django.db.models.functions import Coalesce
+        import openpyxl
+        from openpyxl.styles import Font, Alignment, PatternFill
+        from django.utils import timezone
+
+        try:
+            annee_active = AnneeScolaire.objects.get(est_active=True)
+        except AnneeScolaire.DoesNotExist:
+            annee_active = None
+
+        classe_id = request.GET.get('classe')
+        
+        inscriptions = Inscription.objects.filter(
+            annee_scolaire=annee_active,
+            is_deleted=False,
+            statut=StatutInscriptionEnum.EN_COURS
+        )
+        
+        if classe_id:
+            inscriptions = inscriptions.filter(classe_id=classe_id)
+            
+        inscriptions = inscriptions.select_related(
+            'eleve', 'classe', 'classe__niveau'
+        ).annotate(
+            total_paye=Coalesce(
+                Sum('paiements__montant', filter=Q(paiements__is_deleted=False)),
+                Value(0, output_field=DecimalField())
+            )
+        ).annotate(
+            reste_a_payer=ExpressionWrapper(
+                F('frais_total') - F('total_paye'),
+                output_field=DecimalField()
+            )
+        ).order_by('classe__niveau__ordre', 'classe__nom', 'eleve__nom', 'eleve__prenom')
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "État des Paiements"
+
+        # Styles
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        alignment = Alignment(horizontal="center", vertical="center")
+
+        # Headers
+        headers = ["N°", "Classe", "Matricule", "Nom et Prénom", "Pension Attendue (FCFA)", "Montant Payé (FCFA)", "Reste à Payer (FCFA)", "Statut"]
+        ws.append(headers)
+
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(row=1, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = alignment
+
+        # Data
+        for idx, ins in enumerate(inscriptions, start=1):
+            statut = "SOLDÉ" if ins.reste_a_payer <= 0 else "PARTIEL" if ins.total_paye > 0 else "IMPAYÉ"
+            ws.append([
+                idx,
+                ins.classe.nom,
+                ins.eleve.matricule,
+                ins.eleve.nom_complet,
+                float(ins.frais_total),
+                float(ins.total_paye),
+                float(ins.reste_a_payer),
+                statut
+            ])
+
+        # Adjust column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column].width = adjusted_width
+
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        date_str = timezone.now().strftime("%Y%m%d_%H%M")
+        filename = f"Etat_Paiements_{date_str}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        wb.save(response)
+        return response
+
+export_paiements_excel_view = ExportPaiementsExcelView.as_view()
+
+
+class BackupDatabaseView(LoginRequiredMixin, django.views.generic.View):
+    def get(self, request, *args, **kwargs):
+        from django.http import FileResponse
+        from django.conf import settings
+        import os
+        from django.utils import timezone
+
+        db_path = settings.DATABASES['default'].get('NAME')
+        if not db_path or not os.path.exists(db_path):
+            from django.contrib import messages
+            from django.shortcuts import redirect
+            messages.error(request, "Impossible de trouver le fichier de base de données local.")
+            return redirect("dashboard")
+
+        date_str = timezone.now().strftime("%Y-%m-%d")
+        filename = f"sauvegarde_cispam_{date_str}.sqlite3"
+
+        response = FileResponse(open(db_path, 'rb'), as_attachment=True, filename=filename)
+        return response
+
+backup_database_view = BackupDatabaseView.as_view()
 
 
 # ==============================================================================
