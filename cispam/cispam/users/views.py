@@ -387,10 +387,10 @@ class FraisScolariteCreateView(LoginRequiredMixin, RedirectView):
         from cispam.users.models import AnneeScolaire, Classe, FraisScolarite
 
         classe_id = request.POST.get("classe")
-        montant_total = request.POST.get("montant_total", 0)
-        montant_tranche_1 = request.POST.get("montant_tranche_1", 0)
-        montant_tranche_2 = request.POST.get("montant_tranche_2", 0)
-        montant_tranche_3 = request.POST.get("montant_tranche_3", 0)
+        montant_tranche_1 = float(request.POST.get("montant_tranche_1", 0) or 0)
+        montant_tranche_2 = float(request.POST.get("montant_tranche_2", 0) or 0)
+        montant_tranche_3 = float(request.POST.get("montant_tranche_3", 0) or 0)
+        montant_total = montant_tranche_1 + montant_tranche_2 + montant_tranche_3
 
         try:
             annee_active = AnneeScolaire.objects.get(est_active=True)
@@ -642,6 +642,12 @@ class PaiementCreateView(LoginRequiredMixin, RedirectView):
             # Pas de restriction de montant. La tranche reflète la portion de la
             # pension couverte par ce versement.
             cumul_avant = float(sum(p.montant for p in inscription.paiements.filter(is_deleted=False)))
+            
+            # Vérification du solde (Interdiction de payer si déjà soldé)
+            if cumul_avant >= float(inscription.frais_total):
+                messages.error(request, "Cette inscription est déjà totalement soldée, vous ne pouvez plus enregistrer de paiement.")
+                return redirect(request.META.get("HTTP_REFERER", "inscriptions_list"))
+                
             cumul_apres = cumul_avant + montant_num
 
             try:
