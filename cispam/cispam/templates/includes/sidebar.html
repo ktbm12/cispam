@@ -7,16 +7,20 @@
     <!-- Brand Header -->
     <a href="{% url 'dashboard' %}" class="flex items-center gap-3 group">
       <div class="w-11 h-11 bg-amber-500 text-slate-950 font-black rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20 border-2 border-amber-300 group-hover:scale-105 transition-transform">
-        C
+        {% if etablissement.logo %}
+          <img src="{{ etablissement.logo.url }}" alt="{{ etablissement.sigle }}" class="w-full h-full object-cover rounded-xl">
+        {% else %}
+          {{ etablissement.sigle.0|default:"C" }}
+        {% endif %}
       </div>
       <div>
         <div class="flex items-center gap-1.5">
-          <h1 class="text-xl font-black font-display tracking-tight text-white">C.I.S.P.A.M.</h1>
+          <h1 class="text-xl font-black font-display tracking-tight text-white">{{ etablissement.sigle|default:"C.I.S.P.A.M." }}</h1>
           <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 uppercase">
-            Bafoussam
+            {{ etablissement.ville|default:"Bafoussam" }}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400 font-medium">Gestion Scolaire & Caisse</p>
+        <p class="text-[11px] text-slate-400 font-medium whitespace-nowrap overflow-hidden text-ellipsis w-48" title="{{ etablissement.nom_complet }}">{{ etablissement.nom_complet|default:"Gestion Scolaire & Caisse" }}</p>
       </div>
     </a>
 

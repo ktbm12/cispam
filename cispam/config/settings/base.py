@@ -183,6 +183,7 @@ TEMPLATES = [
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
                 "cispam.users.context_processors.allauth_settings",
+                "cispam.users.context_processors.etablissement_processor",
             ],
         },
     },

@@ -131,6 +131,70 @@ class OngManager(models.Manager):
 
 
 # ==============================================================================
+# COMPANY SETTINGS (SINGLETON)
+# ==============================================================================
+
+class ConfigurationEtablissement(models.Model):
+    nom_complet = models.CharField(
+        max_length=255, 
+        default="Centre d'Intégration Scolaire et Professionnelle pour Aveugles et Malvoyants",
+        help_text=_("Nom complet de l'établissement")
+    )
+    sigle = models.CharField(
+        max_length=50, 
+        default="C.I.S.P.A.M.",
+        help_text=_("Sigle ou acronyme")
+    )
+    ville = models.CharField(
+        max_length=100, 
+        default="Bafoussam",
+        help_text=_("Ville d'implantation")
+    )
+    boite_postale = models.CharField(
+        max_length=100, 
+        blank=True, 
+        default="BP. 829 Bafoussam",
+        help_text=_("Boîte postale complète")
+    )
+    telephone = models.CharField(
+        max_length=100, 
+        blank=True, 
+        default="",
+        help_text=_("Numéros de téléphone (séparés par des virgules)")
+    )
+    email = models.EmailField(
+        blank=True, 
+        default="",
+        help_text=_("Adresse email de contact")
+    )
+    logo = models.ImageField(
+        upload_to="etablissement/logos/", 
+        blank=True, 
+        null=True,
+        help_text=_("Logo officiel de l'établissement")
+    )
+
+    class Meta:
+        verbose_name = _("Configuration Établissement")
+        verbose_name_plural = _("Configuration Établissement")
+
+    def __str__(self):
+        return self.nom_complet
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def get_solo(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
+# ==============================================================================
 # UTILITAIRE SLUG
 # ==============================================================================
 

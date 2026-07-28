@@ -20,6 +20,7 @@ from .models import (
     Paiement,
     Recu,
     Utilisateur,
+    ConfigurationEtablissement,
 )
 
 
@@ -53,6 +54,21 @@ class SoftDeleteAdminMixin:
         self.message_user(request, _("{} objet(s) supprimé(s) définitivement.").format(count))
 
     actions = ['restaurer', 'supprimer_definitivement']
+
+
+# ==============================================================================
+# ADMIN — CONFIGURATION ÉTABLISSEMENT (SINGLETON)
+# ==============================================================================
+
+@admin.register(ConfigurationEtablissement)
+class ConfigurationEtablissementAdmin(admin.ModelAdmin):
+    list_display = ['nom_complet', 'sigle', 'ville', 'telephone']
+
+    def has_add_permission(self, request):
+        # N'autorise l'ajout que s'il n'y a pas encore d'enregistrement
+        if self.model.objects.exists():
+            return False
+        return super().has_add_permission(request)
 
 
 # ==============================================================================
