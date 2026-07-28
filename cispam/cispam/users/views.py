@@ -535,6 +535,17 @@ class FraisScolariteCreateView(LoginRequiredMixin, RedirectView):
                     "montant_tranche_3": montant_tranche_3,
                 },
             )
+            
+            # Mise à jour automatique du frais_total pour les élèves déjà inscrits
+            # dans cette classe dont le frais_total est à 0.
+            from cispam.users.models import Inscription
+            inscriptions_a_maj = Inscription.objects.filter(
+                classe=classe,
+                annee_scolaire=annee_active,
+                frais_total=0
+            )
+            updated_count = inscriptions_a_maj.update(frais_total=montant_total)
+            
             action_text = "définie" if created else "mise à jour"
             messages.success(request, f"La grille tarifaire de la classe {classe.nom} a été {action_text} avec succès !")
         except Exception as e:
