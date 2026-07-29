@@ -7,9 +7,11 @@ license = { text = "MIT" }
 authors = [
   { name = "ktbm12", email = "ktbm12@cispam.org" },
 ]
-requires-python = "==3.14.*"
+requires-python = ">=3.12"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
@@ -29,7 +31,7 @@ dependencies = [
   "hiredis==3.4.0",
   "openpyxl>=3.1.5",
   "pillow==12.3.0",
-  "psycopg[c]==3.3.4",
+  "psycopg-binary==3.3.4",
   "python-slugify==8.0.4",
   "pywebview>=6.2.1",
   "redis==8.0.1",
@@ -52,7 +54,7 @@ dev = [
   "ipdb==0.13.13",
   "mypy==2.3.0",
   "pre-commit==4.6.1",
-  "psycopg[c]==3.3.4",
+  "psycopg-binary==3.3.4",
   "pyinstaller>=6.21.0",
   "pytest==9.1.1",
   "pytest-django==4.12.0",
