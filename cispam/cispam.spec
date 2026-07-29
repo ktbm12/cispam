@@ -25,6 +25,20 @@ hidden_imports = [
     'config.wsgi',
     'whitenoise',
     'whitenoise.runserver_nostatic',
+    
+    # Imports cachés pour Celery
+    'celery',
+    'celery.fixups.django',
+    'celery.loaders.app',
+    'celery.backends.database',
+    'celery.backends.redis',
+    'celery.app.amqp',
+    'celery.worker.components',
+    'celery.app.events',
+    'celery.events.state',
+    'kombu.transport.redis',
+    'django_celery_beat',
+    'django_celery_beat.apps',
 ]
 
 a = Analysis(
