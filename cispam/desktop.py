@@ -21,7 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR))
 sys.path.append(str(BASE_DIR / "cispam"))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.desktop")
+
+import django
+django.setup()
+
+from django.core.management import execute_from_command_line
+# Run migrations automatically to initialize the empty database if needed
+print("Vérification et application des migrations de la base de données...")
+execute_from_command_line(["manage.py", "migrate"])
 
 from config.wsgi import application  # noqa: E402
 

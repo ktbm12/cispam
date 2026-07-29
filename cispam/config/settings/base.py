@@ -4,10 +4,18 @@
 import ssl
 from pathlib import Path
 
+import sys
 import environ
 
-BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
-# restaurants/
+if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the PyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app 
+    # path into variable _MEIPASS'.
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+
+# cispam/
 APPS_DIR = BASE_DIR / "cispam"
 env = environ.Env()
 
