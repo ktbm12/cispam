@@ -1,0 +1,50 @@
+name: Build Windows Desktop App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Permet de lancer la compilation manuellement depuis l'interface GitHub
+
+jobs:
+  build:
+    name: Build Windows Executable
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          # On utilise 3.12 ou 3.x si 3.14 (actuellement expérimental/futur) n'est pas encore dispo sur l'environnement Windows GitHub
+          python-version: '3.x' 
+
+      - name: Install uv (Fast Python Package Installer)
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r pyproject.toml
+          uv pip install pyinstaller pywebview waitress whitenoise
+
+      - name: Collect Static Files
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.desktop
+          DATABASE_URL: sqlite:///db.sqlite3
+        run: |
+          .venv\Scripts\python manage.py collectstatic --noinput
+
+      - name: Build with PyInstaller
+        run: |
+          .venv\Scripts\pyinstaller cispam.spec
+
+      - name: Upload Windows Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: CISPAM-Windows-Exe
+          path: dist/CISPAM.exe
