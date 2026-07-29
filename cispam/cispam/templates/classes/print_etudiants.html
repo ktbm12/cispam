@@ -95,6 +95,21 @@
             <span>Année Scolaire : <span class="font-black text-slate-900">{{ annee_active.libelle|default:"Non définie" }}</span></span>
             <span>Effectif : <span class="font-black text-slate-900">{{ classe.inscriptions_actives|length }}</span></span>
           </div>
+
+          <div class="mt-8 flex flex-wrap justify-between gap-6 text-sm font-bold text-slate-800 px-2">
+            <div class="flex-1 min-w-[250px]">
+              <span class="inline-block mb-1">Enseignant :</span>
+              <div class="border-b-2 border-dotted border-slate-500 h-5 w-full"></div>
+            </div>
+            <div class="flex-1 min-w-[250px]">
+              <span class="inline-block mb-1">Matière :</span>
+              <div class="border-b-2 border-dotted border-slate-500 h-5 w-full"></div>
+            </div>
+            <div class="w-48">
+              <span class="inline-block mb-1">Séquence :</span>
+              <div class="border-b-2 border-dotted border-slate-500 h-5 w-full"></div>
+            </div>
+          </div>
         </div>
 
         {% if classe.inscriptions_actives %}
@@ -104,22 +119,31 @@
               <th class="py-2 px-3 border border-slate-400 w-12 text-center">N°</th>
               <th class="py-2 px-3 border border-slate-400">Matricule</th>
               <th class="py-2 px-3 border border-slate-400">Nom(s) et Prénom(s)</th>
-              <th class="py-2 px-3 border border-slate-400 w-16 text-center">Sexe</th>
-              <th class="py-2 px-3 border border-slate-400">Date de Naissance</th>
+              <th class="py-2 px-3 border border-slate-400 w-20 text-center">Note 1</th>
+              <th class="py-2 px-3 border border-slate-400 w-20 text-center">Note 2</th>
+              <th class="py-2 px-3 border border-slate-400 w-24 text-center">Moyenne</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-300">
             {% for inscription in classe.inscriptions_actives %}
             <tr>
               <td class="py-2 px-3 border border-slate-400 text-center font-bold">{{ forloop.counter }}</td>
-              <td class="py-2 px-3 border border-slate-400 font-mono">{{ inscription.eleve.matricule }}</td>
-              <td class="py-2 px-3 border border-slate-400 font-bold">{{ inscription.eleve.nom_complet }}</td>
-              <td class="py-2 px-3 border border-slate-400 text-center">{{ inscription.eleve.sexe }}</td>
-              <td class="py-2 px-3 border border-slate-400">{{ inscription.eleve.date_naissance|date:"d/m/Y" }}</td>
+              <td class="py-2 px-3 border border-slate-400 font-mono text-xs">{{ inscription.eleve.matricule }}</td>
+              <td class="py-2 px-3 border border-slate-400 font-bold text-sm">{{ inscription.eleve.nom_complet }}</td>
+              <td class="py-2 px-3 border border-slate-400 text-center"></td>
+              <td class="py-2 px-3 border border-slate-400 text-center"></td>
+              <td class="py-2 px-3 border border-slate-400 text-center"></td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
+
+        <div class="mt-10 mb-4 flex justify-end text-sm font-bold text-slate-800 px-4">
+          <div class="w-64 text-center">
+            <span class="inline-block mb-16">Signature de l'enseignant :</span>
+            <div class="border-b-2 border-dotted border-slate-500 w-full"></div>
+          </div>
+        </div>
         {% else %}
         <div class="text-center py-8 text-slate-500 font-medium italic border border-slate-300 border-dashed">
           Aucun élève inscrit dans cette classe pour l'année en cours.
