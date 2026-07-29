@@ -63,5 +63,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='cispam/static/images/logo.ico' # Changez ceci si vous avez une icône (optionnel)
+    icon='cispam/static/images/favicons/favicon.ico' # Changez ceci si vous avez une icône (optionnel)
 )
