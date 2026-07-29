@@ -15,6 +15,10 @@ jobs:
       run:
         working-directory: cispam
 
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.desktop
+      DATABASE_URL: sqlite:///db.sqlite3
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +26,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x' 
+          python-version: '3.12'
 
       - name: Install uv (Fast Python Package Installer)
         uses: astral-sh/setup-uv@v3
