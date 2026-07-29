@@ -10,6 +10,10 @@ jobs:
   build:
     name: Build Windows Executable
     runs-on: windows-latest
+    
+    defaults:
+      run:
+        working-directory: cispam
 
     steps:
       - name: Checkout code
@@ -18,7 +22,6 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          # On utilise 3.12 ou 3.x si 3.14 (actuellement expérimental/futur) n'est pas encore dispo sur l'environnement Windows GitHub
           python-version: '3.x' 
 
       - name: Install uv (Fast Python Package Installer)
@@ -47,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CISPAM-Windows-Exe
-          path: dist/CISPAM.exe
+          path: cispam/dist/CISPAM.exe
