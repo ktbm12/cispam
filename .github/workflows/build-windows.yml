@@ -31,8 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv venv
-          uv pip install -r pyproject.toml
+          uv sync
           uv pip install pyinstaller pywebview waitress whitenoise
 
       - name: Collect Static Files
@@ -40,11 +39,11 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.desktop
           DATABASE_URL: sqlite:///db.sqlite3
         run: |
-          .venv\Scripts\python manage.py collectstatic --noinput
+          uv run python manage.py collectstatic --noinput
 
       - name: Build with PyInstaller
         run: |
-          .venv\Scripts\pyinstaller cispam.spec
+          uv run pyinstaller cispam.spec
 
       - name: Upload Windows Executable
         uses: actions/upload-artifact@v4
