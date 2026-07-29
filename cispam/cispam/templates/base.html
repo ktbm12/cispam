@@ -7,12 +7,10 @@
   <title>{% block title %}{{ etablissement.sigle|default:"CISPAM" }} — {{ etablissement.nom_complet|default:"Centre d'Intégration Scolaire et Professionnelle" }}{% endblock title %}</title>
 
   <!-- Google Fonts: Inter & Outfit -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="{% static 'css/fonts.css' %}" rel="stylesheet">
 
   <!-- FontAwesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
 
   <!-- Tailwind CSS Output (v4) -->
   <link href="{% static 'css/output.css' %}" rel="stylesheet">
