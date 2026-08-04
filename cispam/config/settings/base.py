@@ -19,7 +19,9 @@ else:
 APPS_DIR = BASE_DIR / "cispam"
 env = environ.Env()
 
-env.read_env(BASE_DIR / ".env")
+env_file = BASE_DIR / ".env"
+if env_file.is_file():
+    env.read_env(env_file)
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug

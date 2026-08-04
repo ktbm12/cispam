@@ -17,9 +17,15 @@ import webview
 from waitress import serve
 
 # Chemins et environnement Django
-BASE_DIR = Path(__file__).resolve().parent
-sys.path.append(str(BASE_DIR))
-sys.path.append(str(BASE_DIR / "cispam"))
+# When frozen by PyInstaller, sys._MEIPASS is the temp directory where
+# all bundled files (templates, static, migrations, etc.) are extracted.
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+
+sys.path.insert(0, str(BASE_DIR))
+sys.path.insert(0, str(BASE_DIR / "cispam"))
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.desktop")
 

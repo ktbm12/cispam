@@ -45,6 +45,11 @@ jobs:
         run: |
           uv run python manage.py collectstatic --noinput
 
+      - name: Verify spec file exists
+        run: |
+          echo "Checking cispam.spec..."
+          Get-Item cispam.spec
+
       - name: Build with PyInstaller
         run: |
           uv run pyinstaller cispam.spec
