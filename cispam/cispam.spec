@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 
@@ -14,13 +15,18 @@ added_files = [
     ('staticfiles', 'staticfiles'),
     ('locale', 'locale'),
 ]
+added_files += collect_data_files('fido2')
+added_files += collect_data_files('allauth')
+added_files += collect_data_files('crispy_forms')
+added_files += collect_data_files('crispy_bootstrap5')
+added_files += collect_data_files('django')
 
 # Imports cachés (Hidden imports) 
-# PyInstaller détecte généralement bien Django, mais on force les applications locales
 hidden_imports = [
     'cispam.users',
     'cispam.users.apps',
     'cispam.users.urls',
+    'cispam.users.core_urls',
     'config.settings.desktop',
     'config.wsgi',
     'whitenoise',
@@ -40,6 +46,16 @@ hidden_imports = [
     'django_celery_beat',
     'django_celery_beat.apps',
 ]
+
+# Collect all submodules for key packages to prevent runtime MissingModule errors
+hidden_imports += collect_submodules('cispam')
+hidden_imports += collect_submodules('config')
+hidden_imports += collect_submodules('allauth')
+hidden_imports += collect_submodules('crispy_forms')
+hidden_imports += collect_submodules('crispy_bootstrap5')
+hidden_imports += collect_submodules('webview')
+hidden_imports += collect_submodules('openpyxl')
+
 
 a = Analysis(
     ['desktop.py'],
