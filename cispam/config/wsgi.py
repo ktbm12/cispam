@@ -22,7 +22,10 @@ from django.core.wsgi import get_wsgi_application
 
 # This allows easy placement of apps within the interior
 # cispam directory.
-BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 sys.path.append(str(BASE_DIR / "cispam"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
 
