@@ -37,6 +37,24 @@ from django.core.management import execute_from_command_line
 print("Vérification et application des migrations de la base de données...")
 execute_from_command_line(["manage.py", "migrate"])
 
+
+def ensure_default_admin():
+    """Create a default admin account on first launch if no user exists yet."""
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    if not User.objects.exists():
+        print("Création du compte administrateur par défaut (admin@gmail.com)...")
+        User.objects.create_superuser(
+            email="admin@gmail.com",
+            password="admin",
+            name="Administrateur",
+            role="directeur",
+        )
+
+
+ensure_default_admin()
+
 from config.wsgi import application  # noqa: E402
 
 
