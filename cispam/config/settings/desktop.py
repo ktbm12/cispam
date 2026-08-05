@@ -8,9 +8,12 @@ from .base import env, INSTALLED_APPS
 # =============================================================================
 # A unique secret key for the desktop installation.
 # This is safe to hardcode because the desktop app runs locally only (127.0.0.1).
-SECRET_KEY = env(
-    "DJANGO_SECRET_KEY",
-    default="cispam-desktop-local-only-key-xn7HlVwKROgOxOe5GxpHQhVrxvH28j8bHGxs7CI93zDg",
+# `or` (not just env()'s default=) guards against DJANGO_SECRET_KEY being present
+# but set to an empty string in the environment, which env()'s default= would not
+# catch and which Django rejects with "SECRET_KEY setting must not be empty".
+SECRET_KEY = (
+    env("DJANGO_SECRET_KEY", default="")
+    or "cispam-desktop-local-only-key-xn7HlVwKROgOxOe5GxpHQhVrxvH28j8bHGxs7CI93zDg"
 )
 
 # GENERAL
