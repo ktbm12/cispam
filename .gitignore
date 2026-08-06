@@ -1,0 +1,16 @@
+# Root-level ignores for the license-server project (cispam/ has its own
+# .gitignore for the desktop/web app).
+license-server/.venv/
+license-server/venv/
+license-server/__pycache__/
+license-server/**/__pycache__/
+license-server/*.egg-info/
+license-server/staticfiles/
+license-server/db.sqlite3
+license-server/.env
+license-server/.envs/*
+!license-server/.envs/.local/
+license-server/.dev_signing_key.pem
+license-server/.pytest_cache/
+license-server/.ruff_cache/
+license-server/.coverage

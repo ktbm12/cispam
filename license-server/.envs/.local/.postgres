@@ -1,0 +1,5 @@
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=cispam_license
+POSTGRES_USER=cispam_license
+POSTGRES_PASSWORD=cispam_license

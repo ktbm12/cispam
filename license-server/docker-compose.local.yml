@@ -1,0 +1,29 @@
+volumes:
+  cispam_license_local_postgres_data: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: cispam_license_local_django
+    container_name: cispam_license_local_django
+    depends_on:
+      - postgres
+    volumes:
+      - /app/.venv
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - '8100:8000'
+    command: /start
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: cispam_license_local_postgres
+    volumes:
+      - cispam_license_local_postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./.envs/.local/.postgres

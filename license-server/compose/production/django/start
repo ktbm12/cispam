@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+python /app/manage.py migrate
+# No-op if REDIS_URL is set (Redis cache backend doesn't need a DB table);
+# only needed for the DatabaseCache fallback used when REDIS_URL is unset.
+if [ -z "${REDIS_URL:-}" ]; then
+    python /app/manage.py createcachetable django_cache_table
+fi
+python /app/manage.py collectstatic --noinput
+
+exec gunicorn config.wsgi --bind 0.0.0.0:5000 --chdir=/app --workers 3

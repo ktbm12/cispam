@@ -1,0 +1,45 @@
+volumes:
+  cispam_license_production_postgres_data: {}
+  cispam_license_production_postgres_data_backups: {}
+  cispam_license_production_traefik: {}
+  cispam_license_production_redis_data: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: cispam_license_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    command: /start
+
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - cispam_license_production_postgres_data:/var/lib/postgresql/data
+      - cispam_license_production_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.production/.postgres
+
+  redis:
+    image: docker.io/redis:7.2
+    volumes:
+      - cispam_license_production_redis_data:/data
+
+  traefik:
+    build:
+      context: .
+      dockerfile: ./compose/production/traefik/Dockerfile
+    image: cispam_license_production_traefik
+    depends_on:
+      - django
+    volumes:
+      - cispam_license_production_traefik:/etc/traefik/acme
+    ports:
+      - '0.0.0.0:80:80'
+      - '0.0.0.0:443:443'

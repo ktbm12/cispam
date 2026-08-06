@@ -1,0 +1,12 @@
+# General
+# ------------------------------------------------------------------------------
+DJANGO_SETTINGS_MODULE=config.settings.local
+DJANGO_DEBUG=True
+
+# Postgres
+# ------------------------------------------------------------------------------
+DATABASE_URL=postgres://cispam_license:cispam_license@postgres:5432/cispam_license
+
+# License signing (leave unset locally — config/settings/local.py generates
+# and persists a dev-only keypair automatically the first time you run it)
+# LICENSE_SIGNING_PRIVATE_KEY_PEM=
