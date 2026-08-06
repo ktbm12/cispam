@@ -37,8 +37,7 @@ else:
 
 # SECURITY
 # ------------------------------------------------------------------------------
-# Traefik (same reverse-proxy pattern as the main cispam production stack)
-# terminates TLS and forwards this header.
+# Nginx (compose/production/nginx/) terminates TLS and forwards this header.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
 SESSION_COOKIE_SECURE = True

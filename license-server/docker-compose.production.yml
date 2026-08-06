@@ -1,8 +1,10 @@
 volumes:
   cispam_license_production_postgres_data: {}
   cispam_license_production_postgres_data_backups: {}
-  cispam_license_production_traefik: {}
   cispam_license_production_redis_data: {}
+  cispam_license_production_static: {}
+  cispam_license_production_certbot_conf: {}
+  cispam_license_production_certbot_www: {}
 
 services:
   django:
@@ -10,6 +12,8 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: cispam_license_production_django
+    volumes:
+      - cispam_license_production_static:/app/staticfiles
     depends_on:
       - postgres
       - redis
@@ -31,15 +35,26 @@ services:
     volumes:
       - cispam_license_production_redis_data:/data
 
-  traefik:
+  nginx:
     build:
       context: .
-      dockerfile: ./compose/production/traefik/Dockerfile
-    image: cispam_license_production_traefik
+      dockerfile: ./compose/production/nginx/Dockerfile
+    image: cispam_license_production_nginx
     depends_on:
       - django
     volumes:
-      - cispam_license_production_traefik:/etc/traefik/acme
+      - cispam_license_production_static:/app/staticfiles:ro
+      - cispam_license_production_certbot_conf:/etc/letsencrypt
+      - cispam_license_production_certbot_www:/var/www/certbot
     ports:
       - '0.0.0.0:80:80'
       - '0.0.0.0:443:443'
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - cispam_license_production_certbot_conf:/etc/letsencrypt
+      - cispam_license_production_certbot_www:/var/www/certbot
+    entrypoint: >-
+      sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot;
+      sleep 12h & wait $${!}; done"

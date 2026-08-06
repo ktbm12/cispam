@@ -50,22 +50,33 @@ maintenance.
 
 ## Production deployment
 
-```
-docker compose -f docker-compose.production.yml up --build -d
-```
+Reverse proxy / TLS is Nginx + certbot (webroot HTTP-01 challenge), not
+Traefik — matches the requested stack.
 
-Before deploying:
-- Create `.envs/.production/.django` and `.envs/.production/.postgres`
-  (gitignored — not present in this repo) with at least: `DJANGO_SECRET_KEY`,
-  `DJANGO_ALLOWED_HOSTS`, `DJANGO_ADMIN_URL`, `LICENSE_SIGNING_PRIVATE_KEY_PEM`,
-  `REDIS_URL=redis://redis:6379/0`, and the Postgres credentials.
-- Edit `compose/production/traefik/traefik.yml`: replace the placeholder
-  domain (`license.cispam.org`) and ACME contact email with real values.
-- This stack runs its own Traefik instance on ports 80/443. If you're hosting
-  this on the same VPS as the main CISPAM production stack, you cannot run
-  two services both binding those ports — either put this service on a
-  separate host, or (better, as a follow-up) consolidate onto one shared
-  Traefik instance with a second router rule instead of running two.
+Before first deploy:
+1. Create `.envs/.production/.django` and `.envs/.production/.postgres`
+   (gitignored — not present in this repo) with at least: `DJANGO_SECRET_KEY`,
+   `DJANGO_ALLOWED_HOSTS`, `DJANGO_ADMIN_URL`, `LICENSE_SIGNING_PRIVATE_KEY_PEM`,
+   `REDIS_URL=redis://redis:6379/0`, and the Postgres credentials.
+2. Edit the domain placeholder (`license.cispam.org`) in **both**
+   `compose/production/nginx/nginx.conf` and `scripts/init-letsencrypt.sh`
+   (they must match), and set a real `EMAIL` in the latter.
+3. This stack binds ports 80/443 itself. If you're hosting this on the same
+   VPS as the main CISPAM production stack (which runs its own Traefik on
+   those same ports), you cannot run both as-is — either put this service on
+   a separate host, or point Nginx here at different host ports and put
+   whatever already owns 80/443 in front of it instead.
+4. Bring up everything except Nginx first, then run the one-time TLS
+   bootstrap (see `scripts/init-letsencrypt.sh` for what it does and why):
+   ```
+   docker compose -f docker-compose.production.yml up -d django postgres redis certbot
+   bash scripts/init-letsencrypt.sh
+   ```
+   Leave `STAGING=1` in the script for the first run to avoid Let's Encrypt's
+   rate limits while you confirm it works, then set `STAGING=0` and re-run.
+5. `certbot` renews automatically (a loop checking every 12h); Nginx needs a
+   `docker compose exec nginx nginx -s reload` after a renewal picks up a new
+   cert — cheapest is a cron entry on the host calling that on a schedule.
 
 ## Project layout
 
