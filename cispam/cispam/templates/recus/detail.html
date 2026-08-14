@@ -6,56 +6,62 @@
 {% block body %}
 <style>
   @media print {
-    /* Cache uniquement la barre d'outils haut */
+    /* Masquer les éléments non imprimables */
     .no-print { 
       display: none !important; 
     }
 
-    /* Page A4 Portrait avec marges optimales */
+    /* Configuration de la page A4 Portrait pleine page sans marges grises */
     @page {
       size: A4 portrait;
       margin: 8mm 10mm;
     }
 
     html, body { 
-      background-color: #f8fafc !important; 
+      background-color: #ffffff !important; 
       margin: 0 !important;
       padding: 0 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
       font-size: 10pt !important;
+      width: 100% !important;
+      height: 100% !important;
     }
 
     .min-h-screen { 
-      min-height: unset !important;
+      min-height: 100% !important;
       padding: 0 !important; 
       margin: 0 !important; 
-      background-color: transparent !important;
+      background-color: #ffffff !important;
     }
 
-    /* Forcer le moteur d'impression à conserver 100% des couleurs, dégradés et fonds */
+    /* Force le noir et blanc strict à l'impression */
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
     }
 
-    /* Format carte officielle avec coins arrondis et ombre douce sur le PDF */
+    /* Format pleine page sur le papier A4 */
     .printable-ticket {
-      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06) !important;
-      margin: 0 auto !important;
-      padding: 22px 26px !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 24px 28px !important;
       width: 100% !important;
       max-width: 100% !important;
-      border: 1px solid #cbd5e1 !important;
-      border-radius: 16px !important;
+      min-height: 272mm !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      border: 2px solid #000000 !important;
+      border-radius: 0 !important;
       background-color: #ffffff !important;
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
 
-    /* Garantir 2 colonnes cote-à-cote sur le PDF A4 */
+    /* Alignement 2 colonnes strict */
     .grid-cols-2-always {
       display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -64,250 +70,248 @@
   }
 </style>
 
-<div class="min-h-screen bg-slate-900/5 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] py-6 px-4 font-sans antialiased text-slate-900">
+<div class="min-h-screen bg-slate-100 py-6 px-4 font-sans antialiased text-black">
 
   <!-- TOP CONTROL BAR (NO PRINT) -->
-  <div class="max-w-2xl mx-auto mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
+  <div class="max-w-4xl mx-auto mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
     <a href="javascript:history.back()" 
-       class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold tracking-wide transition shadow-sm flex items-center gap-2 border border-slate-700">
+       class="px-4 py-2 bg-black hover:bg-zinc-800 text-white rounded-lg text-xs font-bold tracking-wide transition shadow-sm flex items-center gap-2 border border-black">
       <i class="fas fa-arrow-left text-xs"></i>
       <span>Retour</span>
     </a>
 
     <div class="flex items-center gap-3">
-      <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 text-xs font-semibold">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-200 text-black border border-black text-xs font-bold">
+        <span class="w-2.5 h-2.5 rounded-full bg-black animate-pulse"></span>
         Reçu Officiel Validé
       </span>
       <button onclick="window.print()"
-        class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-black transition shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer">
+        class="px-5 py-2 bg-black hover:bg-zinc-800 text-white rounded-lg text-xs font-black transition shadow-md flex items-center gap-2 cursor-pointer border border-black">
         <i class="fas fa-print"></i>
         <span>Télécharger PDF / Imprimer</span>
       </button>
     </div>
   </div>
 
-  <!-- OFFICIAL RECEIPT CARD (High Aesthetic PDF & Screen layout) -->
-  <div class="max-w-2xl mx-auto bg-white shadow-2xl rounded-2xl border border-slate-200 printable-ticket p-6 md:p-7 relative overflow-hidden">
+  <!-- DOCUMENT OFFICIEL PLEINE PAGE (NOIR & BLANC STRICT) -->
+  <div class="max-w-4xl mx-auto bg-white border-2 border-black printable-ticket p-8 shadow-xl min-h-[960px] flex flex-col justify-between relative rounded-none">
 
-    <!-- Top Accent Stripe -->
-    <div class="h-1.5 bg-gradient-to-r from-emerald-600 via-slate-800 to-amber-500 -mt-6 -mx-6 md:-mt-7 md:-mx-7 mb-5"></div>
+    <div>
+      <!-- ===================== EN-TÊTE OFFICIEL ===================== -->
+      <div class="border-b-2 border-black pb-4 mb-5">
+        <div class="grid grid-cols-3 items-center text-center leading-tight">
+          
+          <!-- Left: Cameroun Fr -->
+          <div class="text-[11px] md:text-xs font-black uppercase text-black space-y-0.5">
+            <p>RÉPUBLIQUE DU CAMEROUN</p>
+            <p class="font-bold italic text-[9.5px] md:text-[10.5px] text-zinc-700 lowercase first-letter:uppercase">Paix - Travail - Patrie</p>
+            <div class="mt-1 border-b-2 border-black w-12 mx-auto"></div>
+          </div>
+          
+          <!-- Center: Logo / Sigle -->
+          <div class="flex flex-col items-center justify-center">
+            <div class="w-16 h-16 md:w-18 md:h-18 bg-white border-2 border-black rounded-full flex items-center justify-center p-1">
+              {% if etablissement.logo %}
+                <img src="{{ etablissement.logo.url }}" alt="{{ etablissement.sigle }}" class="w-full h-full object-cover rounded-full grayscale">
+              {% else %}
+                <span class="text-2xl font-serif font-black text-black tracking-tighter">{{ etablissement.sigle.0|default:"C" }}</span>
+              {% endif %}
+            </div>
+          </div>
 
-    <!-- ===================== EN-TÊTE OFFICIEL ===================== -->
-    <div class="border-b-2 border-slate-900 pb-3 mb-4">
-      <div class="grid grid-cols-3 items-center text-center leading-tight">
-        
-        <!-- Left: Cameroun Fr -->
-        <div class="text-[10px] md:text-xs font-extrabold uppercase text-slate-800 space-y-0.5">
-          <p>RÉPUBLIQUE DU CAMEROUN</p>
-          <p class="font-medium italic text-[9px] md:text-[10px] text-slate-500 lowercase first-letter:uppercase">Paix - Travail - Patrie</p>
-          <div class="mt-1 border-b border-slate-300 w-10 mx-auto"></div>
+          <!-- Right: Cameroun En -->
+          <div class="text-[11px] md:text-xs font-black uppercase text-black space-y-0.5">
+            <p>REPUBLIC OF CAMEROON</p>
+            <p class="font-bold italic text-[9.5px] md:text-[10.5px] text-zinc-700 lowercase first-letter:uppercase">Peace - Work - Fatherland</p>
+            <div class="mt-1 border-b-2 border-black w-12 mx-auto"></div>
+          </div>
         </div>
         
-        <!-- Center: Logo / Sigle -->
-        <div class="flex flex-col items-center justify-center">
-          <div class="w-13 h-13 md:w-15 md:h-15 bg-slate-50 border-2 border-slate-900 rounded-full flex items-center justify-center shadow-sm p-1">
-            {% if etablissement.logo %}
-              <img src="{{ etablissement.logo.url }}" alt="{{ etablissement.sigle }}" class="w-full h-full object-cover rounded-full">
+        <!-- Institution Title & Address -->
+        <div class="text-center mt-3">
+          <h1 class="text-base md:text-lg font-black font-serif uppercase tracking-tight text-black leading-tight">
+            {{ etablissement.nom_complet|default:"Centre d'Intégration Scolaire et Professionnelle pour Aveugles et Malvoyants" }}
+          </h1>
+          <p class="text-xs text-zinc-800 font-bold mt-1 flex flex-wrap justify-center items-center gap-x-3 gap-y-0.5">
+            <span>{{ etablissement.boite_postale|default:"B.P. 829 Bafoussam" }}</span>
+            {% if etablissement.telephone %}<span>• Tél : {{ etablissement.telephone }}</span>{% endif %}
+            {% if etablissement.email %}<span>• Email : {{ etablissement.email }}</span>{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- ===================== TITRE DU REÇU & METADATA ===================== -->
+      <div class="flex flex-col items-center justify-center mb-6">
+        <div class="inline-block px-8 py-2 bg-black text-white font-black text-sm md:text-base uppercase tracking-widest border border-black">
+          REÇU DE PAIEMENT
+        </div>
+
+        <div class="flex flex-wrap justify-center items-center gap-3 mt-3 text-xs font-bold text-black">
+          <span class="bg-white px-4 py-1.5 border-2 border-black text-black">
+            N° : <span class="font-mono font-black text-black text-sm ml-1">{{ recu.numero_recu }}</span>
+          </span>
+          <span class="bg-white px-4 py-1.5 border-2 border-black text-black">
+            Date : <span class="font-mono font-black text-black text-sm ml-1">{{ recu.paiement.date_paiement|date:"d/m/Y" }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ===================== INFORMATIONS ÉLÈVE & PARENT ===================== -->
+      <div class="grid grid-cols-2 grid-cols-2-always gap-4 text-xs mb-5">
+        <!-- Élève -->
+        <div class="bg-white border-2 border-black p-4 space-y-1.5">
+          <div class="flex items-center justify-between text-xs uppercase font-black tracking-wider text-black border-b border-black pb-1 mb-2">
+            <span><i class="fas fa-user-graduate mr-1.5"></i>Élève</span>
+          </div>
+          <p class="font-black text-sm text-black leading-tight">{{ recu.paiement.inscription.eleve.nom_complet }}</p>
+          <p class="text-xs text-zinc-800"><span class="font-bold text-zinc-700">Matricule :</span> <span class="font-mono font-black text-black">{{ recu.paiement.inscription.eleve.matricule|default:"—" }}</span></p>
+          <p class="text-xs text-zinc-800"><span class="font-bold text-zinc-700">Classe :</span> <span class="font-black text-black">{{ recu.paiement.inscription.classe.nom }}</span></p>
+          <p class="text-xs text-zinc-800"><span class="font-bold text-zinc-700">Année scolaire :</span> <span class="font-black text-black">{{ recu.paiement.inscription.annee_scolaire.libelle }}</span></p>
+        </div>
+        
+        <!-- Parent/Payeur -->
+        <div class="bg-white border-2 border-black p-4 space-y-1.5">
+          <div class="flex items-center justify-between text-xs uppercase font-black tracking-wider text-black border-b border-black pb-1 mb-2">
+            <span><i class="fas fa-users mr-1.5"></i>Versant / Parent</span>
+          </div>
+          {% with parent=recu.paiement.inscription.eleve.parents.first %}
+            {% if parent %}
+              <p class="font-black text-sm text-black leading-tight">{{ parent.nom_complet }}</p>
+              <p class="text-xs text-zinc-800"><span class="font-bold text-zinc-700">Lien de parenté :</span> <span class="font-black text-black">{{ parent.get_lien_parente_display }}</span></p>
+              <p class="text-xs text-zinc-800"><span class="font-bold text-zinc-700">Contact :</span> <span class="font-mono font-black text-black">{{ parent.telephone|default:"—" }}</span></p>
             {% else %}
-              <span class="text-xl font-serif font-black text-slate-900 tracking-tighter">{{ etablissement.sigle.0|default:"C" }}</span>
+              <p class="italic text-zinc-600 text-xs py-1">Non renseigné</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+
+      <!-- ===================== DÉTAIL DU VERSEMENT (HERO BANNER NOIR & BLANC) ===================== -->
+      <div class="border-2 border-black p-5 mb-5 bg-black text-white">
+        <div class="flex justify-between items-end gap-2 pb-3 border-b border-zinc-700">
+          <div>
+            <p class="text-xs font-black text-zinc-300 uppercase tracking-widest">Motif du versement</p>
+            <p class="text-base md:text-lg font-black tracking-tight text-white mt-1">
+              Frais de Scolarité — {{ recu.paiement.get_tranche_display }}
+            </p>
+            <p class="text-xs text-zinc-300 font-bold mt-1">
+              Mode de paiement : <span class="font-black text-white">{{ recu.paiement.get_mode_paiement_display }}</span>
+              {% if recu.paiement.reference_transaction %} 
+                <span class="text-zinc-400 ml-1 font-mono text-xs">(Réf: {{ recu.paiement.reference_transaction }})</span>
+              {% endif %}
+            </p>
+          </div>
+
+          <div class="text-right">
+            <p class="text-xs font-black text-zinc-300 uppercase tracking-widest">Montant Encaissé</p>
+            <p class="text-2xl md:text-3xl font-black font-mono tracking-tight text-white mt-1">
+              {{ recu.paiement.montant|floatformat:0 }} <span class="text-base font-sans text-zinc-200">FCFA</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="mt-3">
+          <p class="text-[10px] uppercase font-black text-zinc-400 tracking-wider">Montant en toutes lettres</p>
+          <p class="font-black italic text-xs md:text-sm text-white tracking-wide mt-1 leading-tight uppercase">
+            *** {{ montant_lettres|upper }} ***
+          </p>
+        </div>
+      </div>
+
+      <!-- ===================== SITUATION FINANCIÈRE (BILAN) ===================== -->
+      <div class="mb-5">
+        <div class="border-b-2 border-black pb-1 mb-3">
+          <h3 class="text-xs md:text-sm font-black uppercase tracking-wider text-black flex items-center gap-2">
+            <i class="fas fa-file-invoice-dollar text-black"></i>
+            <span>Situation Financière Globale & Historique</span>
+          </h3>
+        </div>
+        
+        <!-- Historique des versements -->
+        <div class="overflow-x-auto border-2 border-black mb-3">
+          <table class="w-full text-left text-xs font-medium border-collapse">
+            <thead>
+              <tr class="bg-zinc-200 font-black text-black border-b-2 border-black uppercase tracking-wide text-xs">
+                <th class="py-2 px-3 border-r border-black">Date</th>
+                <th class="py-2 px-3 border-r border-black">Référence</th>
+                <th class="py-2 px-3 text-right border-r border-black">Montant</th>
+                <th class="py-2 px-3 text-right">Reste à payer</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-black">
+              {% for item in paiements_avec_cumuls %}
+              <tr class="text-xs border-b border-black {% if item.est_courant %}bg-zinc-100 font-black{% endif %}">
+                <td class="py-2 px-3 border-r border-black whitespace-nowrap text-black font-bold">{{ item.paiement.date_paiement|date:"d/m/Y" }}</td>
+                <td class="py-2 px-3 border-r border-black text-black font-mono font-bold">
+                  {{ item.paiement.reference }}
+                  {% if item.est_courant %}
+                    <span class="bg-black text-white px-2 py-0.5 font-mono text-[9px] font-black uppercase inline-block ml-2 border border-black">Ce reçu</span>
+                  {% endif %}
+                </td>
+                <td class="py-2 px-3 text-right border-r border-black font-mono font-black text-black">{{ item.paiement.montant|floatformat:0 }} FCFA</td>
+                <td class="py-2 px-3 text-right text-black font-bold">
+                  {% if item.est_solde_ligne %}
+                    <span class="font-black text-black uppercase">Soldé ✓</span>
+                  {% else %}
+                    <span class="font-mono font-black text-black">{{ item.reste_apres|floatformat:0 }} FCFA</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Récapitulatif Final -->
+        <div class="grid grid-cols-3 gap-0 border-2 border-black bg-zinc-50 divide-x-2 divide-black text-center py-3 text-xs">
+          <div class="px-2">
+            <p class="text-[10px] font-black text-black uppercase tracking-wider">Pension Totale</p>
+            <p class="text-sm font-black text-black font-mono mt-1">{{ total_pension|floatformat:0 }} FCFA</p>
+          </div>
+          <div class="px-2">
+            <p class="text-[10px] font-black text-black uppercase tracking-wider">Cumul Payé</p>
+            <p class="text-sm font-black text-black font-mono mt-1">{{ cumul_total_paye|floatformat:0 }} FCFA</p>
+          </div>
+          <div class="px-2 bg-zinc-100">
+            <p class="text-[10px] font-black text-black uppercase tracking-wider">Reste à Payer</p>
+            {% if est_solde %}
+              <p class="text-sm font-black text-black uppercase tracking-wide mt-1">
+                [ SOLDÉ ✓ ]
+              </p>
+            {% else %}
+              <p class="text-sm font-black text-black font-mono mt-1">{{ solde_restant|floatformat:0 }} FCFA</p>
             {% endif %}
           </div>
         </div>
-
-        <!-- Right: Cameroun En -->
-        <div class="text-[10px] md:text-xs font-extrabold uppercase text-slate-800 space-y-0.5">
-          <p>REPUBLIC OF CAMEROON</p>
-          <p class="font-medium italic text-[9px] md:text-[10px] text-slate-500 lowercase first-letter:uppercase">Peace - Work - Fatherland</p>
-          <div class="mt-1 border-b border-slate-300 w-10 mx-auto"></div>
-        </div>
-      </div>
-      
-      <!-- Institution Title & Address -->
-      <div class="text-center mt-2">
-        <h1 class="text-sm md:text-base font-black font-serif uppercase tracking-tight text-slate-900 leading-tight">
-          {{ etablissement.nom_complet|default:"Centre d'Intégration Scolaire et Professionnelle pour Aveugles et Malvoyants" }}
-        </h1>
-        <p class="text-[10px] md:text-[11px] text-slate-600 font-medium mt-0.5 flex flex-wrap justify-center items-center gap-x-2 gap-y-0.5">
-          <span>{{ etablissement.boite_postale|default:"B.P. 829 Bafoussam" }}</span>
-          {% if etablissement.telephone %}<span>• Tél : {{ etablissement.telephone }}</span>{% endif %}
-          {% if etablissement.email %}<span>• Email : {{ etablissement.email }}</span>{% endif %}
-        </p>
       </div>
     </div>
 
-    <!-- ===================== TITRE DU REÇU & METADATA ===================== -->
-    <div class="flex flex-col items-center justify-center mb-4">
-      <div class="inline-block px-5 py-1.5 bg-slate-900 text-white font-black text-xs md:text-sm uppercase tracking-widest rounded-lg shadow-sm">
-        Reçu de Paiement
-      </div>
-
-      <div class="flex flex-wrap justify-center items-center gap-2.5 mt-2.5 text-xs font-semibold text-slate-700">
-        <span class="bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 text-slate-700">
-          N° : <span class="font-mono font-black text-slate-900 text-xs ml-1">{{ recu.numero_recu }}</span>
-        </span>
-        <span class="bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 text-slate-700">
-          Date : <span class="font-mono font-black text-slate-900 text-xs ml-1">{{ recu.paiement.date_paiement|date:"d/m/Y" }}</span>
-        </span>
-      </div>
-    </div>
-
-    <!-- ===================== INFORMATIONS ÉLÈVE & PARENT (ALWAYS 2 COLUMNS) ===================== -->
-    <div class="grid grid-cols-2 grid-cols-2-always gap-3.5 text-xs mb-4">
-      <!-- Élève -->
-      <div class="bg-slate-50/80 border border-slate-200 rounded-xl p-3.5 space-y-1 shadow-sm">
-        <div class="flex items-center gap-1.5 text-[10px] uppercase font-extrabold tracking-wider text-slate-500 border-b border-slate-200 pb-1 mb-1.5">
-          <i class="fas fa-user-graduate text-slate-400"></i>
-          <span>Élève</span>
+    <div>
+      <!-- ===================== SIGNATURES & STAMP AREA ===================== -->
+      <div class="grid grid-cols-2 gap-8 text-xs font-bold pt-6 border-t-2 border-black">
+        <div class="text-center space-y-8">
+          <p class="uppercase font-black tracking-wider text-black text-xs">Signature du Versant</p>
+          <div class="border-t border-black w-4/5 mx-auto pt-1 text-[9.5px] font-bold text-black uppercase">Pour accord & décharge</div>
         </div>
-        <p class="font-black text-xs md:text-sm text-slate-900 leading-tight">{{ recu.paiement.inscription.eleve.nom_complet }}</p>
-        <p class="text-[11px] text-slate-700"><span class="font-semibold text-slate-500">Matricule :</span> <span class="font-mono font-bold text-slate-900">{{ recu.paiement.inscription.eleve.matricule|default:"—" }}</span></p>
-        <p class="text-[11px] text-slate-700"><span class="font-semibold text-slate-500">Classe :</span> <span class="font-bold text-slate-900">{{ recu.paiement.inscription.classe.nom }}</span></p>
-        <p class="text-[11px] text-slate-700"><span class="font-semibold text-slate-500">Année :</span> <span class="font-bold text-slate-900">{{ recu.paiement.inscription.annee_scolaire.libelle }}</span></p>
-      </div>
-      
-      <!-- Parent/Payeur -->
-      <div class="bg-slate-50/80 border border-slate-200 rounded-xl p-3.5 space-y-1 shadow-sm">
-        <div class="flex items-center gap-1.5 text-[10px] uppercase font-extrabold tracking-wider text-slate-500 border-b border-slate-200 pb-1 mb-1.5">
-          <i class="fas fa-users text-slate-400"></i>
-          <span>Versant / Parent</span>
-        </div>
-        {% with parent=recu.paiement.inscription.eleve.parents.first %}
-          {% if parent %}
-            <p class="font-black text-xs md:text-sm text-slate-900 leading-tight">{{ parent.nom_complet }}</p>
-            <p class="text-[11px] text-slate-700"><span class="font-semibold text-slate-500">Lien :</span> <span class="font-bold text-slate-900">{{ parent.get_lien_parente_display }}</span></p>
-            <p class="text-[11px] text-slate-700"><span class="font-semibold text-slate-500">Contact :</span> <span class="font-mono font-bold text-slate-900">{{ parent.telephone|default:"—" }}</span></p>
-          {% else %}
-            <p class="italic text-slate-400 text-[11px] py-0.5">Non renseigné</p>
-          {% endif %}
-        {% endwith %}
-      </div>
-    </div>
-
-    <!-- ===================== DÉTAIL DU VERSEMENT (HERO BANNER) ===================== -->
-    <div class="border-2 border-slate-900 rounded-xl p-4 mb-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-md">
-      <div class="flex justify-between items-end gap-2 pb-2.5 border-b border-slate-700/80">
-        <div>
-          <p class="text-[9px] md:text-[10px] font-bold text-amber-400 uppercase tracking-widest">Motif du versement</p>
-          <p class="text-sm md:text-base font-black tracking-tight text-white mt-0.5">
-            Frais de Scolarité — {{ recu.paiement.get_tranche_display }}
-          </p>
-          <p class="text-[11px] text-slate-300 font-medium mt-0.5">
-            Mode : <span class="font-bold text-white">{{ recu.paiement.get_mode_paiement_display }}</span>
-            {% if recu.paiement.reference_transaction %} 
-              <span class="text-slate-400 ml-1 font-mono text-[10px]">(Réf: {{ recu.paiement.reference_transaction }})</span>
-            {% endif %}
-          </p>
-        </div>
-
-        <div class="text-right">
-          <p class="text-[9px] md:text-[10px] font-bold text-slate-300 uppercase tracking-widest">Montant Encaissé</p>
-          <p class="text-xl md:text-2xl font-black font-mono tracking-tight text-amber-400 mt-0.5">
-            {{ recu.paiement.montant|floatformat:0 }} <span class="text-sm font-sans text-amber-300">FCFA</span>
-          </p>
+        <div class="text-center space-y-8">
+          <p class="uppercase font-black tracking-wider text-black text-xs">L'Économe / La Caisse</p>
+          <div class="border-t border-black w-4/5 mx-auto pt-1 text-[9.5px] font-black uppercase tracking-wide text-black">
+            {{ recu.paiement.operateur|default:etablissement.sigle|default:"CISPAM" }}
+          </div>
         </div>
       </div>
-      
-      <div class="mt-2.5">
-        <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Montant en toutes lettres</p>
-        <p class="font-black italic text-xs md:text-sm text-slate-100 tracking-wide mt-0.5 leading-tight">
-          *** {{ montant_lettres|upper }} ***
-        </p>
-      </div>
-    </div>
 
-    <!-- ===================== SITUATION FINANCIÈRE (BILAN) ===================== -->
-    <div class="mb-4">
-      <div class="flex items-center justify-between border-b-2 border-slate-900 pb-1 mb-2">
-        <h3 class="text-[11px] md:text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-          <i class="fas fa-file-invoice-dollar text-slate-600"></i>
-          <span>Situation Financière Globale & Historique</span>
-        </h3>
+      <!-- ===================== FOOTER ===================== -->
+      <div class="mt-6 pt-3 border-t border-black text-center text-[9px] text-zinc-800 font-bold space-y-0.5">
+        <p class="font-black text-black">Ce reçu est un document officiel valant preuve de paiement. Veuillez le conserver précieusement.</p>
+        <p class="text-[8.5px] text-zinc-700">Généré le {{ recu.date_emission|date:"d/m/Y à H:i" }} par le système de gestion {{ etablissement.sigle|default:"CISPAM" }}.</p>
       </div>
-      
-      <!-- Historique des versements -->
-      <div class="overflow-x-auto rounded-lg border border-slate-300 mb-2">
-        <table class="w-full text-left text-xs font-medium border-collapse">
-          <thead>
-            <tr class="bg-slate-100 font-bold text-slate-800 border-b border-slate-300 text-[10px] uppercase tracking-wide">
-              <th class="py-1.5 px-2.5 border-r border-slate-300">Date</th>
-              <th class="py-1.5 px-2.5 border-r border-slate-300">Référence</th>
-              <th class="py-1.5 px-2.5 text-right border-r border-slate-300">Montant</th>
-              <th class="py-1.5 px-2.5 text-right">Reste à payer</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-200">
-            {% for item in paiements_avec_cumuls %}
-            <tr class="text-[11px] transition {% if item.est_courant %}bg-amber-500/10 font-bold text-slate-900{% else %}hover:bg-slate-50{% endif %}">
-              <td class="py-1.5 px-2.5 border-r border-slate-300 whitespace-nowrap">{{ item.paiement.date_paiement|date:"d/m/Y" }}</td>
-              <td class="py-1.5 px-2.5 border-r border-slate-300">
-                <span class="font-mono">{{ item.paiement.reference }}</span>
-                {% if item.est_courant %}
-                  <span class="inline-block px-1.5 py-0.5 bg-amber-500 text-slate-950 font-black text-[9px] rounded uppercase ml-1.5">Ce reçu</span>
-                {% endif %}
-              </td>
-              <td class="py-1.5 px-2.5 text-right border-r border-slate-300 font-mono font-bold">{{ item.paiement.montant|floatformat:0 }} FCFA</td>
-              <td class="py-1.5 px-2.5 text-right">
-                {% if item.est_solde_ligne %}
-                  <span class="inline-flex items-center gap-1 font-extrabold text-emerald-700">
-                    <i class="fas fa-check-circle text-[9px]"></i>Soldé ✓
-                  </span>
-                {% else %}
-                  <span class="font-mono font-semibold text-slate-800">{{ item.reste_apres|floatformat:0 }} FCFA</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Récapitulatif Final -->
-      <div class="grid grid-cols-3 gap-1.5 border border-slate-300 bg-slate-50 rounded-lg divide-x divide-slate-300 text-center py-2.5 text-xs shadow-sm">
-        <div class="px-1.5">
-          <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Pension Totale</p>
-          <p class="text-xs md:text-sm font-black text-slate-900 font-mono mt-0.5">{{ total_pension|floatformat:0 }} FCFA</p>
-        </div>
-        <div class="px-1.5">
-          <p class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Cumul Payé</p>
-          <p class="text-xs md:text-sm font-black text-emerald-700 font-mono mt-0.5">{{ cumul_total_paye|floatformat:0 }} FCFA</p>
-        </div>
-        <div class="px-1.5 bg-slate-100/80">
-          <p class="text-[9px] font-bold text-slate-700 uppercase tracking-wider">Reste à Payer</p>
-          {% if est_solde %}
-            <p class="text-xs md:text-sm font-black text-emerald-700 mt-0.5 uppercase tracking-wide flex items-center justify-center gap-1">
-              <i class="fas fa-check-circle text-xs"></i>Soldé ✓
-            </p>
-          {% else %}
-            <p class="text-xs md:text-sm font-black text-rose-700 font-mono mt-0.5">{{ solde_restant|floatformat:0 }} FCFA</p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- ===================== SIGNATURES & STAMP AREA ===================== -->
-    <div class="grid grid-cols-2 gap-4 text-xs font-bold mt-5 pt-1">
-      <div class="text-center space-y-6">
-        <p class="uppercase font-extrabold tracking-wider text-slate-700 text-[11px]">Signature du Versant</p>
-        <div class="border-t border-slate-400 w-4/5 mx-auto pt-0.5 text-[9px] font-medium text-slate-500">Pour accord & décharge</div>
-      </div>
-      <div class="text-center space-y-6 relative">
-        <p class="uppercase font-extrabold tracking-wider text-slate-700 text-[11px]">L'Économe / La Caisse</p>
-        <div class="border-t border-slate-400 w-4/5 mx-auto pt-0.5 text-[9px] font-black uppercase tracking-wide text-slate-900">
-          {{ recu.paiement.operateur|default:etablissement.sigle|default:"CISPAM" }}
-        </div>
-      </div>
-    </div>
-
-    <!-- ===================== FOOTER ===================== -->
-    <div class="mt-5 pt-2 border-t border-slate-200 text-center text-[9px] text-slate-500 font-medium space-y-0.5">
-      <p class="font-semibold text-slate-600">Ce reçu est un document officiel valant preuve de paiement. Veuillez le conserver précieusement.</p>
-      <p class="text-[8.5px] text-slate-400">Généré le {{ recu.date_emission|date:"d/m/Y à H:i" }} par le système de gestion {{ etablissement.sigle|default:"CISPAM" }}.</p>
     </div>
 
   </div>
 </div>
 {% endblock body %}
+
 
 
 
