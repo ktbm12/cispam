@@ -39,6 +39,58 @@ else:
     LOG_DIR = Path.home() / ".cispam"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 CRASH_LOG = LOG_DIR / "crash.log"
+SHORTCUT_MARKER = LOG_DIR / ".shortcut_created"
+
+
+def create_desktop_shortcut():
+    """Create a desktop shortcut on first launch (Windows only, frozen mode)."""
+    if os.name != 'nt' or not getattr(sys, 'frozen', False):
+        return
+    if SHORTCUT_MARKER.exists():
+        return
+
+    try:
+        import ctypes
+        # Ask the user if they want a desktop shortcut
+        result = ctypes.windll.user32.MessageBoxW(
+            0,
+            "Voulez-vous créer un raccourci CISPAM sur le Bureau ?",
+            "CISPAM — Installation",
+            0x24,  # MB_YESNO | MB_ICONQUESTION
+        )
+        # Mark as done regardless of choice so we don't ask again
+        SHORTCUT_MARKER.write_text("done", encoding="utf-8")
+
+        if result != 6:  # IDYES == 6
+            return
+
+        # Build shortcut using Windows Script Host COM
+        import subprocess
+        exe_path = Path(sys.executable).resolve()
+        icon_path = exe_path  # The exe itself contains the icon
+
+        desktop = Path(os.environ.get(
+            'USERPROFILE', str(Path.home())
+        )) / "Desktop"
+        shortcut_path = desktop / "CISPAM.lnk"
+
+        # Use PowerShell to create the .lnk shortcut
+        ps_script = f'''
+$ws = New-Object -ComObject WScript.Shell
+$sc = $ws.CreateShortcut("{shortcut_path}")
+$sc.TargetPath = "{exe_path}"
+$sc.WorkingDirectory = "{exe_path.parent}"
+$sc.IconLocation = "{icon_path},0"
+$sc.Description = "CISPAM — Gestion Scolaire et Encaissement"
+$sc.Save()
+'''
+        subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps_script],
+            capture_output=True, timeout=10,
+        )
+    except Exception:
+        pass  # Non-critical — don't block the app from starting
+
 
 
 def report_fatal_error(exc: BaseException):
@@ -92,6 +144,7 @@ def bootstrap_django():
 
 
 def main():
+    create_desktop_shortcut()
     application = bootstrap_django()
 
     host = "127.0.0.1"
