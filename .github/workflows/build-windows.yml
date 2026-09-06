@@ -54,12 +54,16 @@ jobs:
         run: |
           uv run pyinstaller cispam.spec
 
-      - name: Compress build output
+      - name: Install Inno Setup
         run: |
-          Compress-Archive -Path dist\CISPAM\* -DestinationPath dist\CISPAM-Windows.zip -Force
+          choco install innosetup --no-progress
 
-      - name: Upload Windows Executable
+      - name: Build Windows Installer with Inno Setup
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+
+      - name: Upload Windows Installer
         uses: actions/upload-artifact@v4
         with:
-          name: CISPAM-Windows
-          path: cispam/dist/CISPAM-Windows.zip
+          name: CISPAM-Installer
+          path: cispam/dist/installer/CISPAM_Setup.exe
