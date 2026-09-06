@@ -2,7 +2,7 @@
 import sys
 import os
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, collect_all
 
 block_cipher = None
 
@@ -35,6 +35,14 @@ added_files += collect_data_files('crispy_bootstrap5')
 added_files += collect_data_files('django')
 added_files += collect_data_files('django_celery_beat')
 added_files += collect_data_files('environ')
+
+# Collect all files, binaries, and hidden imports for webview, pythonnet, and clr_loader
+wv_datas, wv_binaries, wv_hidden = collect_all('webview')
+pn_datas, pn_binaries, pn_hidden = collect_all('pythonnet')
+clr_datas, clr_binaries, clr_hidden = collect_all('clr_loader')
+
+added_files += wv_datas + pn_datas + clr_datas
+added_binaries = wv_binaries + pn_binaries + clr_binaries
 
 # ============================================================================
 # HIDDEN IMPORTS — Python modules that are imported dynamically at runtime
@@ -125,6 +133,7 @@ hidden_imports += collect_submodules('django.contrib')
 hidden_imports += collect_submodules('django_celery_beat')
 hidden_imports += collect_submodules('environ')
 hidden_imports += collect_submodules('argon2')
+hidden_imports += wv_hidden + pn_hidden + clr_hidden + ['clr', 'pythonnet', 'clr_loader', 'webview']
 
 # De-duplicate
 hidden_imports = list(set(hidden_imports))
@@ -135,13 +144,13 @@ hidden_imports = list(set(hidden_imports))
 a = Analysis(
     ['desktop.py'],
     pathex=[str(base_dir)],
-    binaries=[],
+    binaries=added_binaries,
     datas=added_files,
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['pythonnet', 'clr', 'clr_loader', 'Python.Runtime'],
+    excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
