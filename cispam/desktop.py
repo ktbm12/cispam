@@ -11,7 +11,14 @@ import os
 import socket
 import sys
 import threading
+import io
 from pathlib import Path
+
+# Fix for "NoneType object has no attribute 'write'" in PyInstaller windowed mode
+if sys.stdout is None:
+    sys.stdout = io.StringIO()
+if sys.stderr is None:
+    sys.stderr = io.StringIO()
 
 import webview
 from waitress import serve
