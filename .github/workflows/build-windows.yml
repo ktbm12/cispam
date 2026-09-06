@@ -57,5 +57,5 @@ jobs:
       - name: Upload Windows Executable
         uses: actions/upload-artifact@v4
         with:
-          name: CISPAM-Windows-Exe
-          path: cispam/dist/CISPAM.exe
+          name: CISPAM-Windows
+          path: cispam/dist/CISPAM/
